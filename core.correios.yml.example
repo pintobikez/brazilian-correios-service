@@ -1,0 +1,10 @@
+cartaoPostagem: "0057018901"
+codAdministrativo : "08082650"
+contrato : "9912208555"
+userReversa: empresacws
+pwReversa: 123456
+urlReversa: https://apphom.correios.com.br/logisticaReversaWS/logisticaReversaService/logisticaReversaWS
+userTracking: ECT
+pwTracking: SRO
+urlTracking: http://webservice.correios.com.br:80/service/rastro
+maxRetries: 5

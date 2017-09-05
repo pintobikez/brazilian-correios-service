@@ -1,13 +1,13 @@
 package structures
 
 const (
-	STATUS_PENDING    = "pending"
-	STATUS_PROCESSING = "processing"
-	STATUS_GENERATED  = "generated"
-	STATUS_CANCELED   = "canceled"
-	STATUS_USED       = "used"
-	STATUS_EXPIRED    = "expired"
-	STATUS_ERROR      = "error"
+	StatusPending    = "pending"
+	StatusProcessing = "processing"
+	StatusGenerated  = "generated"
+	StatusCanceled   = "canceled"
+	StatusUsed       = "used"
+	StatusExpired    = "expired"
+	StatusError      = "error"
 )
 
 type Search struct {
@@ -25,7 +25,7 @@ type SearchWhere struct {
 }
 
 type RequestResponse struct {
-	RequestId    int64  `json:"request_id"`
+	RequestID    int64  `json:"request_id"`
 	PostageCode  string `json:"postage_code"`
 	TrackingCode string `json:"tracking_code"`
 	Status       string `json:"status"`
@@ -33,7 +33,7 @@ type RequestResponse struct {
 }
 
 type Request struct {
-	RequestId              int64          `json:"request_id"`
+	RequestID              int64          `json:"request_id"`
 	OrderNr                int64          `json:"order_nr"`
 	RequestType            string         `json:"request_type"`
 	RequestService         string         `json:"request_service"`
@@ -73,8 +73,8 @@ type Request struct {
 }
 
 type RequestItem struct {
-	RequestItemId int64  `json:"request_item_id"`
-	FkRequestId   int64  `json:"fk_request_id"`
+	RequestItemID int64  `json:"request_item_id"`
+	FkRequestID   int64  `json:"fk_request_id"`
 	Item          string `json:"item"`
 	ProductName   string `json:"product_name"`
 }

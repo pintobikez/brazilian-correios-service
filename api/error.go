@@ -14,6 +14,16 @@ type (
 		Code    int    `json:"code"`
 		Message string `json:"message"`
 	}
+
+	ErrResponseValidation struct {
+		Type   string           `json:"error_type"`
+		Errors []*ErrValidation `json:"errors"`
+	}
+
+	ErrValidation struct {
+		Field   string `json:"field"`
+		Message string `json:"message"`
+	}
 )
 
 func Error(err error, c echo.Context) {

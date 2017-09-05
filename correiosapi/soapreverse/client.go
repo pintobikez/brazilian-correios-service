@@ -128,7 +128,7 @@ type Objeto struct {
 	Desc    string `xml:"desc,omitempty"`
 	Entrega string `xml:"entrega,omitempty"`
 	Num     string `xml:"num,omitempty"`
-	Id      string `xml:"id,omitempty"`
+	ID      string `xml:"id,omitempty"`
 }
 
 type Remetente struct {

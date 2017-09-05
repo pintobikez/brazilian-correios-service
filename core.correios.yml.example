@@ -4,7 +4,7 @@ contrato : "9912208555"
 userReversa: empresacws
 pwReversa: 123456
 urlReversa: https://apphom.correios.com.br/logisticaReversaWS/logisticaReversaService/logisticaReversaWS
-userTracking: "USERTRACKING"
-pwTracking: "PWTRACKING"
+userTracking: 1120041800
+pwTracking: FVZV3RWT4A
 urlTracking: http://webservice.correios.com.br:80/service/rastro
 maxRetries: 5

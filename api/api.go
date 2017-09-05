@@ -16,22 +16,28 @@ import (
 	"strings"
 )
 
-var OPERATOR_VALUES = map[string]bool{"LIKE": true, "=": true, ">=": true, "<=": true, "<>": true, "!=": true, "IN": true, "NOT IN": true}
+const DateRegex = "(^(((0[1-9]|1[0-9]|2[0-8])[/](0[1-9]|1[012]))|((29|30|31)[/](0[13578]|1[02]))|((29|30)[/](0[4,6,9]|11)))[/](19|[2-9][0-9])$)|(^29[/]02[/](19|[2-9][0-9])(00|04|08|12|16|20|24|28|32|36|40|44|48|52|56|60|64|68|72|76|80|84|88|92|96)$)"
 
-const DATE_REGEX = "(^(((0[1-9]|1[0-9]|2[0-8])[/](0[1-9]|1[012]))|((29|30|31)[/](0[13578]|1[02]))|((29|30)[/](0[4,6,9]|11)))[/](19|[2-9][0-9])$)|(^29[/]02[/](19|[2-9][0-9])(00|04|08|12|16|20|24|28|32|36|40|44|48|52|56|60|64|68|72|76|80|84|88|92|96)$)"
+var (
+	OperatorValues   = map[string]bool{"LIKE": true, "=": true, ">=": true, "<=": true, "<>": true, "!=": true, "IN": true, "NOT IN": true}
+	RequestNotFound  = "Request with ID: %d not found"
+	ErrorNotSet      = "%s not set"
+	ErrorIsEmpty     = "is empty"
+	ErrorValidValues = "valid values are: %s"
+)
 
-type Api struct {
+type API struct {
 	Repo repo.RepositoryDefinition
 	Conf *cnf.CorreiosConfig
 	Hand *hand.Handler
 }
 
-func New(r repo.RepositoryDefinition, c *cnf.CorreiosConfig) *Api {
-	return &Api{Repo: r, Conf: c, Hand: &hand.Handler{Repo: r, Conf: c}}
+func New(r repo.RepositoryDefinition, c *cnf.CorreiosConfig) *API {
+	return &API{Repo: r, Conf: c, Hand: &hand.Handler{Repo: r, Conf: c}}
 }
 
 // Handler to Get Tracking information
-func (a *Api) GetTracking() echo.HandlerFunc {
+func (a *API) GetTracking() echo.HandlerFunc {
 	return func(c echo.Context) error {
 
 		o := new(strut.Tracking)
@@ -41,25 +47,24 @@ func (a *Api) GetTracking() echo.HandlerFunc {
 		}
 
 		// check if the json is valid
-		if err := a.ValidateTrackingJson(o); err != nil {
-			return c.JSON(http.StatusBadRequest, &ErrResponse{ErrContent{http.StatusBadRequest, err.Error()}})
+		if err := a.ValidateTrackingJSON(o); len(err) > 0 {
+			return c.JSON(http.StatusBadRequest, buildErrorResponse(err))
 		}
 
 		// Track the objects
 		// If the number of objects is Lower then 5 we run it as a normal function
 		// If not we run it a go routine
 		if len(o.Objects) <= 5 {
-			err, ret := a.Hand.TrackObjects(o)
+			ret, err := a.Hand.TrackObjects(o)
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, &ErrResponse{ErrContent{http.StatusInternalServerError, err.Error()}})
 			}
 
 			return c.JSON(http.StatusOK, ret)
-
 		}
 
 		go func() {
-			if _, ret := a.Hand.TrackObjects(o); ret != nil {
+			if ret, _ := a.Hand.TrackObjects(o); ret != nil {
 				doCallbackRequest(ret, o.Callback)
 			}
 		}()
@@ -69,28 +74,28 @@ func (a *Api) GetTracking() echo.HandlerFunc {
 }
 
 // Handler to GET Reverse information of a request
-func (a *Api) GetReverse() echo.HandlerFunc {
+func (a *API) GetReverse() echo.HandlerFunc {
 	return func(c echo.Context) error {
 
 		// if requestId doesn't exist
 		if isset := c.Param("requestId"); isset == "" {
-			return c.JSON(http.StatusBadRequest, "requestId not set")
+			return c.JSON(http.StatusBadRequest, &ErrResponse{ErrContent{http.StatusBadRequest, fmt.Sprintf(ErrorNotSet, "requestId")}})
 		}
 
-		requestId, err := strconv.Atoi(c.Param("requestId"))
+		requestID, err := strconv.Atoi(c.Param("requestId"))
 		// if requestId isn't an int
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, &ErrResponse{ErrContent{http.StatusBadRequest, err.Error()}})
 		}
 
 		// try to find the request
-		res, err := a.Repo.GetRequestById(requestId)
+		res, err := a.Repo.GetRequestById(requestID)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, &ErrResponse{ErrContent{http.StatusInternalServerError, err.Error()}})
 		}
 
-		if res.RequestId == 0 {
-			return c.JSON(http.StatusNotFound, &ErrResponse{ErrContent{http.StatusNotFound, fmt.Sprintf("Request with ID: %d not found", requestId)}})
+		if res.RequestID == 0 {
+			return c.JSON(http.StatusNotFound, &ErrResponse{ErrContent{http.StatusNotFound, fmt.Sprintf(RequestNotFound, requestID)}})
 		}
 
 		return c.JSON(http.StatusOK, res)
@@ -98,7 +103,7 @@ func (a *Api) GetReverse() echo.HandlerFunc {
 }
 
 // Handler to GET Reverse information for N Requests
-func (a *Api) GetReversesBy() echo.HandlerFunc {
+func (a *API) GetReversesBy() echo.HandlerFunc {
 	return func(c echo.Context) error {
 
 		s := new(strut.Search)
@@ -108,8 +113,8 @@ func (a *Api) GetReversesBy() echo.HandlerFunc {
 		}
 
 		// check if the json is valid
-		if err := a.ValidateSearchJson(s); err != nil {
-			return c.JSON(http.StatusBadRequest, &ErrResponse{ErrContent{http.StatusBadRequest, err.Error()}})
+		if err := a.ValidateSearchJSON(s); len(err) > 0 {
+			return c.JSON(http.StatusBadRequest, buildErrorResponse(err))
 		}
 
 		// try to find the requests
@@ -123,7 +128,7 @@ func (a *Api) GetReversesBy() echo.HandlerFunc {
 }
 
 // Handler to POST a Correios Reverse request
-func (a *Api) PostReverse() echo.HandlerFunc {
+func (a *API) PostReverse() echo.HandlerFunc {
 	return func(c echo.Context) error {
 
 		o := new(strut.Request)
@@ -133,8 +138,8 @@ func (a *Api) PostReverse() echo.HandlerFunc {
 		}
 
 		// check if the json is valid
-		if err := a.ValidatePutJson(o); err != nil {
-			return c.JSON(http.StatusBadRequest, &ErrResponse{ErrContent{http.StatusBadRequest, err.Error()}})
+		if err := a.ValidatePutJSON(o); len(err) > 0 {
+			return c.JSON(http.StatusBadRequest, buildErrorResponse(err))
 		}
 
 		// insert the request into the db
@@ -146,13 +151,13 @@ func (a *Api) PostReverse() echo.HandlerFunc {
 		go a.Hand.DoReverseLogistic(o)
 
 		return c.JSON(http.StatusOK, struct {
-			RequestId int64 `json:"request_id"`
-		}{o.RequestId})
+			RequestID int64 `json:"request_id"`
+		}{o.RequestID})
 	}
 }
 
 // Handler to PUT a Correios Reverse request
-func (a *Api) PutReverse() echo.HandlerFunc {
+func (a *API) PutReverse() echo.HandlerFunc {
 	return func(c echo.Context) error {
 
 		o := new(strut.Request)
@@ -162,22 +167,22 @@ func (a *Api) PutReverse() echo.HandlerFunc {
 		}
 
 		// check if the json is valid
-		if err := a.ValidatePutJson(o); err != nil {
-			return c.JSON(http.StatusBadRequest, &ErrResponse{ErrContent{http.StatusBadRequest, err.Error()}})
+		if err := a.ValidatePutJSON(o); len(err) > 0 {
+			return c.JSON(http.StatusBadRequest, buildErrorResponse(err))
 		}
 
 		// try to find the request
-		found, err := a.Repo.FindRequestById(o.RequestId)
+		found, err := a.Repo.FindRequestById(o.RequestID)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, &ErrResponse{ErrContent{http.StatusInternalServerError, err.Error()}})
 		}
 		if !found {
-			return c.JSON(http.StatusInternalServerError, &ErrResponse{ErrContent{http.StatusInternalServerError, "request not found"}})
+			return c.JSON(http.StatusInternalServerError, &ErrResponse{ErrContent{http.StatusInternalServerError, fmt.Sprintf(RequestNotFound, o.RequestID)}})
 		}
 
 		// rollback the status to PENDING
-		if o.Status == strut.STATUS_ERROR || o.Status == strut.STATUS_EXPIRED {
-			o.Status = strut.STATUS_PENDING
+		if o.Status == strut.StatusError || o.Status == strut.StatusExpired {
+			o.Status = strut.StatusPending
 			o.ErrorMessage = ""
 		}
 		// update the request
@@ -191,28 +196,28 @@ func (a *Api) PutReverse() echo.HandlerFunc {
 }
 
 // Handler to DELETE a Correios Reverse request
-func (a *Api) DeleteReverse() echo.HandlerFunc {
+func (a *API) DeleteReverse() echo.HandlerFunc {
 	return func(c echo.Context) error {
 
 		// if requestId doesn't exist
 		if isset := c.Param("requestId"); isset == "" {
-			return c.JSON(http.StatusBadRequest, "requestId not set")
+			return c.JSON(http.StatusBadRequest, &ErrResponse{ErrContent{http.StatusBadRequest, fmt.Sprintf(ErrorNotSet, "requestId")}})
 		}
 
-		requestId, err := strconv.Atoi(c.Param("requestId"))
+		requestID, err := strconv.Atoi(c.Param("requestId"))
 		// if requestId isn't an int
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, &ErrResponse{ErrContent{http.StatusBadRequest, err.Error()}})
 		}
 
 		// try to find the request
-		res, err := a.Repo.GetRequestById(requestId)
+		res, err := a.Repo.GetRequestById(requestID)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, &ErrResponse{ErrContent{http.StatusInternalServerError, err.Error()}})
 		}
 
-		if res.RequestId == 0 {
-			return c.JSON(http.StatusInternalServerError, &ErrResponse{ErrContent{http.StatusInternalServerError, fmt.Sprintf("Request with ID: %d not found", requestId)}})
+		if res.RequestID == 0 {
+			return c.JSON(http.StatusInternalServerError, &ErrResponse{ErrContent{http.StatusInternalServerError, fmt.Sprintf(RequestNotFound, requestID)}})
 		}
 
 		// Create GO routine to perform Correios request
@@ -223,170 +228,193 @@ func (a *Api) DeleteReverse() echo.HandlerFunc {
 }
 
 // Validates the consistency of the Tracking struct
-func (a *Api) ValidateTrackingJson(s *strut.Tracking) error {
+func (a *API) ValidateTrackingJSON(s *strut.Tracking) map[string]string {
+
+	ret := make(map[string]string)
 
 	if s.Callback == "" {
-		return fmt.Errorf("Callback is empty")
+		ret["callback"] = ErrorIsEmpty
 	}
 	if s.TrackingType == "" {
-		return fmt.Errorf("Tracking Type is empty")
+		ret["tracking_type"] = ErrorIsEmpty
 	} else {
 		s.TrackingType = strings.ToUpper(s.TrackingType)
-		if _, ok := hand.TRACKING_TYPE[s.TrackingType]; !ok {
+		if _, ok := hand.TrackingTypeMap[s.TrackingType]; !ok {
 			values := ""
-			for _, value := range hand.TRACKING_TYPE {
+			for _, value := range hand.TrackingTypeMap {
 				values += value + " "
 			}
-			return fmt.Errorf("Tracking Type valid values are: %s", values)
+			ret["tracking_type"] = fmt.Sprintf(ErrorValidValues, values)
 		}
 	}
 	if s.Language == "" {
-		return fmt.Errorf("Language is empty")
+		ret["language"] = ErrorIsEmpty
 	} else {
 		s.Language = strings.ToUpper(s.Language)
-		if _, ok := hand.LANGUAGE[s.Language]; !ok {
+		if _, ok := hand.LanguageMap[s.Language]; !ok {
 			values := ""
-			for _, value := range hand.LANGUAGE {
+			for _, value := range hand.LanguageMap {
 				values += value + " "
 			}
-			return fmt.Errorf("Language valid values are: %s", values)
+			ret["language"] = fmt.Sprintf(ErrorValidValues, values)
 		}
 	}
 	if len(s.Objects) == 0 {
-		return fmt.Errorf("Objects is empty")
+		ret["objects"] = ErrorIsEmpty
 	}
-	return nil
+
+	return ret
 }
 
 // Validates the consistency of the Request struct
-func (a *Api) ValidatePutJson(s *strut.Request) error {
+func (a *API) ValidatePutJSON(s *strut.Request) map[string]string {
+
+	ret := make(map[string]string)
 
 	if s.RequestType == "" {
-		return fmt.Errorf("Request Type is empty")
+		ret["request_type"] = ErrorIsEmpty
 	} else {
 		s.RequestType = strings.ToUpper(s.RequestType)
-		if _, ok := hand.REQUEST_TYPE[s.RequestType]; !ok {
+		if _, ok := hand.RequestTypeMap[s.RequestType]; !ok {
 			values := ""
-			for _, value := range hand.REQUEST_TYPE {
+			for _, value := range hand.RequestTypeMap {
 				values += value + " "
 			}
-			return fmt.Errorf("Request Type valid values are: %s", values)
+			ret["request_type"] = fmt.Sprintf(ErrorValidValues, values)
 		}
 	}
 
 	if s.RequestService == "" {
-		return fmt.Errorf("Request Service is empty")
+		ret["request_service"] = ErrorIsEmpty
 	} else {
 		s.RequestService = strings.ToUpper(s.RequestService)
-		if _, ok := hand.SERVICE_TYPE[s.RequestService]; !ok {
+		if _, ok := hand.ServiceTypeMap[s.RequestService]; !ok {
 			values := ""
-			for _, value := range hand.SERVICE_TYPE {
+			for _, value := range hand.ServiceTypeMap {
 				values += value + " "
 			}
-			return fmt.Errorf("Service Type valid values are: %s", values)
+			ret["request_service"] = fmt.Sprintf(ErrorValidValues, values)
 		}
 	}
 
 	if s.ColectDate != "" {
-		if re := regexp.MustCompile(DATE_REGEX); !re.MatchString(s.ColectDate) {
-			return fmt.Errorf("Colect Date must be in format dd/mm/yyyy")
+		if re := regexp.MustCompile(DateRegex); !re.MatchString(s.ColectDate) {
+			ret["colect_date"] = "Colect Date must be in format dd/mm/yyyy"
 		}
 	}
 
 	if s.OriginNome == "" {
-		return fmt.Errorf("Origin Nome is empty")
+		ret["origin_nome"] = ErrorIsEmpty
 	}
 	if s.OriginLogradouro == "" {
-		return fmt.Errorf("Origin Logradouro is empty")
+		ret["origin_logradouro"] = ErrorIsEmpty
 	}
 	if s.OriginNumero <= 0 {
-		return fmt.Errorf("Origin Numero is empty")
+		ret["origin_numero"] = ErrorIsEmpty
 	}
 	if s.OriginCep == "" {
-		return fmt.Errorf("Origin Cep is empty")
+		ret["origin_cep"] = ErrorIsEmpty
 	}
 	if s.OriginBairro == "" {
-		return fmt.Errorf("Origin Bairro is empty")
+		ret["origin_bairro"] = ErrorIsEmpty
 	}
 	if s.OriginCidade == "" {
-		return fmt.Errorf("Origin Cidade is empty")
+		ret["origin_cidade"] = ErrorIsEmpty
 	}
 	if s.OriginUf == "" {
-		return fmt.Errorf("Origin Uf is empty")
+		ret["origin_uf"] = ErrorIsEmpty
 	}
 	if s.OriginEmail == "" {
-		return fmt.Errorf("Origin Email is empty")
+		ret["origin_email"] = ErrorIsEmpty
 	}
 	if s.Callback == "" {
-		return fmt.Errorf("Callback is empty")
+		ret["callback"] = ErrorIsEmpty
 	}
 	if s.OriginDdd != "" {
 		if _, err := strconv.Atoi(s.OriginDdd); err != nil {
-			return fmt.Errorf("Origin Ddd contains non-numeric characters")
+			ret["origin_ddd"] = fmt.Sprintf(ErrorValidValues, "numeric characters")
 		}
 	}
 	if s.OriginTelefone != "" {
 		if _, err := strconv.Atoi(s.OriginTelefone); err != nil {
-			return fmt.Errorf("Origin Telefone contains non-numeric characters")
+			ret["origin_telefone"] = fmt.Sprintf(ErrorValidValues, "numeric characters")
 		}
 	}
 	if s.SlipNumber == "" {
-		return fmt.Errorf("Slip number is empty")
+		ret["slip_number"] = ErrorIsEmpty
 	}
 	if s.DestinationNome == "" {
-		return fmt.Errorf("Destination Nome is empty")
+		ret["destination_nome"] = ErrorIsEmpty
 	}
 	if s.DestinationLogradouro == "" {
-		return fmt.Errorf("Destination Logradouro is empty")
+		ret["destination_logradouro"] = ErrorIsEmpty
 	}
 	if s.DestinationNumero <= 0 {
-		return fmt.Errorf("Destination Numero is empty")
+		ret["destination_numero"] = ErrorIsEmpty
 	}
 	if s.DestinationCep == "" {
-		return fmt.Errorf("Destination Cep is empty")
+		ret["destination_cep"] = ErrorIsEmpty
 	}
 	if s.DestinationBairro == "" {
-		return fmt.Errorf("Destination Bairro is empty")
+		ret["destination_bairro"] = ErrorIsEmpty
 	}
 	if s.DestinationCidade == "" {
-		return fmt.Errorf("Destination Cidade is empty")
+		ret["destination_cidade"] = ErrorIsEmpty
 	}
 	if s.DestinationUf == "" {
-		return fmt.Errorf("Destination Uf is empty")
+		ret["destination_uf"] = ErrorIsEmpty
 	}
 	if s.DestinationEmail == "" {
-		return fmt.Errorf("Origin Email is empty")
+		ret["destination_email"] = ErrorIsEmpty
 	}
 
 	for _, i := range s.Items {
 		if i.Item == "" {
-			return fmt.Errorf("Item is empty")
+			ret["items"] = ErrorIsEmpty
 		}
 		if i.ProductName == "" {
-			return fmt.Errorf("Product name is empty")
+			ret["product_name"] = ErrorIsEmpty
 		}
 	}
 
-	return nil
+	return ret
 }
 
 // Validates the consistency of the Search struct
-func (a *Api) ValidateSearchJson(s *strut.Search) error {
-	s.OrderType = strings.ToUpper(s.OrderType)
+func (a *API) ValidateSearchJSON(s *strut.Search) map[string]string {
 
-	if s.From < 0 || s.Offset < 0 {
-		return fmt.Errorf("From and Offset is lower than 0")
+	s.OrderType = strings.ToUpper(s.OrderType)
+	ret := make(map[string]string)
+
+	if s.From < 0 {
+		ret["from"] = "lower than 0"
+	}
+	if s.Offset < 0 {
+		ret["offset"] = "lower than 0"
 	}
 	if s.OrderType != "" && s.OrderType != "ASC" && s.OrderType != "DESC" {
-		return fmt.Errorf("Order type must be ASC or DESC")
+		ret["order_type"] = "must be ASC or DESC"
 	}
 	for _, e := range s.Where {
 		e.Operator = strings.ToUpper(e.Operator)
-		if e.Operator != "" && OPERATOR_VALUES[e.Operator] {
-			return fmt.Errorf("Operator as an invalid value, valid: like, =, >=, <=, <>, IN, NOT IN")
+		if e.Operator != "" && OperatorValues[e.Operator] {
+			ret["operator"] = fmt.Sprintf(ErrorValidValues, "like, =, >=, <=, <>, IN, NOT IN")
 		}
 	}
-	return nil
+	return ret
+}
+
+func buildErrorResponse(err map[string]string) *ErrResponseValidation {
+
+	ret := &ErrResponseValidation{Type: "validation", Errors: make([]*ErrValidation, 0, len(err))}
+	i := 0
+
+	for k, v := range err {
+		ret.Errors[i] = &ErrValidation{Field: k, Message: v}
+		i++
+	}
+
+	return ret
 }
 
 // Performs an Http request
@@ -406,10 +434,10 @@ func doCallbackRequest(e *strut.TrackingResponse, url string) {
 
 	// check if it is an https request
 	re := regexp.MustCompile("^https://")
-	useTls := re.MatchString(url)
+	useTlS := re.MatchString(url)
 
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: useTls},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: useTlS},
 	}
 	client := &http.Client{Transport: tr}
 	res, err := client.Do(req)

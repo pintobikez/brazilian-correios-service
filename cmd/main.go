@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	appName string = "correios-service"
-	version string = "0.0.0"
+	appName = "correios-service"
+	version = "0.0.0"
 )
 
 func main() {
@@ -64,14 +64,6 @@ func main() {
 			Value:  "",
 			Usage:  "Expose the swagger file",
 			EnvVar: "SWAGGER_FILE",
-		},
-	}
-
-	app.Commands = []cli.Command{
-		cli.Command{
-			Name:   "check",
-			Usage:  "Check if the configuration and dependencies are ok",
-			Action: Check,
 		},
 	}
 

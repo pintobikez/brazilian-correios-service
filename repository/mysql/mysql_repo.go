@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-const DEFAULT_OFFSET = 50
+const DefaultOffset = 50
 
 type Repository struct {
 	//props
@@ -39,12 +39,12 @@ func (r *Repository) InsertRequest(o *s.Request) error {
 
 	res, err := stmt.Exec(o.RequestType, o.RequestService, o.ColectDate, o.OrderNr, o.SlipNumber, o.OriginNome, o.OriginLogradouro, o.OriginNumero, o.OriginComplemento, o.OriginCep, o.OriginBairro,
 		o.OriginCidade, o.OriginUf, o.OriginReferencia, o.OriginEmail, o.OriginDdd, o.OriginTelefone, o.DestinationNome, o.DestinationLogradouro, o.DestinationNumero, o.DestinationComplemento,
-		o.DestinationCep, o.DestinationBairro, o.DestinationCidade, o.DestinationUf, o.DestinationReferencia, o.DestinationEmail, o.Callback, s.STATUS_PENDING)
+		o.DestinationCep, o.DestinationBairro, o.DestinationCidade, o.DestinationUf, o.DestinationReferencia, o.DestinationEmail, o.Callback, s.StatusPending)
 
 	if err != nil {
 		return fmt.Errorf("Error in insert request: %d %s", o.OrderNr, err.Error())
 	}
-	o.RequestId, _ = res.LastInsertId()
+	o.RequestID, _ = res.LastInsertId()
 	stmt.Close()
 
 	// INSERT THE ITEMS NOW
@@ -54,11 +54,11 @@ func (r *Repository) InsertRequest(o *s.Request) error {
 			return fmt.Errorf("Error in insert request_item prepared statement: %s", err.Error())
 		}
 
-		res, err := stmt.Exec(o.RequestId, i.Item, i.ProductName)
+		res, err := stmt.Exec(o.RequestID, i.Item, i.ProductName)
 		if err != nil {
 			return fmt.Errorf("Error in insert request item: %d %s: %s", o.OrderNr, i.Item, err.Error())
 		}
-		i.RequestItemId, _ = res.LastInsertId()
+		i.RequestItemID, _ = res.LastInsertId()
 	}
 
 	defer stmt.Close()
@@ -81,9 +81,9 @@ func (r *Repository) UpdateRequest(o *s.Request) error {
 
 	_, err = stmt.Exec(o.RequestType, o.RequestService, o.ColectDate, o.OriginNome, o.OriginLogradouro, o.OriginNumero, o.OriginComplemento, o.OriginCep, o.OriginBairro, o.OriginCidade, o.OriginUf, o.OriginReferencia, o.OriginEmail, o.OriginDdd, o.OriginTelefone,
 		o.DestinationNome, o.DestinationLogradouro, o.DestinationNumero, o.DestinationComplemento, o.DestinationCep, o.DestinationBairro, o.DestinationCidade, o.DestinationUf, o.DestinationReferencia, o.DestinationEmail,
-		o.Status, o.ErrorMessage, o.RequestId)
+		o.Status, o.ErrorMessage, o.RequestID)
 	if err != nil {
-		return fmt.Errorf("Could not update Request %d", o.RequestId)
+		return fmt.Errorf("Could not update Request %d", o.RequestID)
 	}
 
 	return nil
@@ -98,15 +98,15 @@ func (r *Repository) UpdateRequestStatus(o *s.Request, status string, message st
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(o.Retries, status, message, o.RequestId)
+	res, err := stmt.Exec(o.Retries, status, message, o.RequestID)
 
 	if err != nil {
-		return 0, fmt.Errorf("Could not update status for Request %d", o.RequestId)
+		return 0, fmt.Errorf("Could not update status for Request %d", o.RequestID)
 	}
 
 	affect, err := res.RowsAffected()
 	if err != nil {
-		return 0, fmt.Errorf("Could not update status for Request %d", o.RequestId)
+		return 0, fmt.Errorf("Could not update status for Request %d", o.RequestID)
 	}
 
 	//update struct
@@ -125,20 +125,20 @@ func (r *Repository) UpdateRequestPostage(o *s.Request, code string) error {
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(code, s.STATUS_GENERATED, o.RequestId)
+	res, err := stmt.Exec(code, s.StatusGenerated, o.RequestID)
 
 	if err != nil {
-		return fmt.Errorf("Could not update postage code for Request %d", o.RequestId)
+		return fmt.Errorf("Could not update postage code for Request %d", o.RequestID)
 	}
 
 	affect, err := res.RowsAffected()
 	if err != nil || affect <= 0 {
-		return fmt.Errorf("Could not update postage code for Request %d", o.RequestId)
+		return fmt.Errorf("Could not update postage code for Request %d", o.RequestID)
 	}
 
 	//update struct
 	o.PostageCode = code
-	o.Status = s.STATUS_GENERATED
+	o.Status = s.StatusGenerated
 
 	return nil
 }
@@ -152,25 +152,25 @@ func (r *Repository) UpdateRequestTracking(o *s.Request, code string) error {
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(code, s.STATUS_USED, o.RequestId)
+	res, err := stmt.Exec(code, s.StatusUsed, o.RequestID)
 
 	if err != nil {
-		return fmt.Errorf("Could not update postage code for Request %d", o.RequestId)
+		return fmt.Errorf("Could not update postage code for Request %d", o.RequestID)
 	}
 
 	affect, err := res.RowsAffected()
 	if err != nil || affect <= 0 {
-		return fmt.Errorf("Could not update postage code for Request %d", o.RequestId)
+		return fmt.Errorf("Could not update postage code for Request %d", o.RequestID)
 	}
 
 	//update struct
 	o.PostageCode = code
-	o.Status = s.STATUS_USED
+	o.Status = s.StatusUsed
 
 	return nil
 }
 
-// Finds Request by RequestId
+// Finds Request by RequestID
 func (r *Repository) FindRequestById(requestId int64) (bool, error) {
 	exists := false
 
@@ -188,7 +188,7 @@ func (r *Repository) FindRequestById(requestId int64) (bool, error) {
 	return exists, nil
 }
 
-// Gets Request info by RequestId
+// Gets Request info by RequestID
 func (r *Repository) GetRequestById(requestId int) (*s.Request, error) {
 	var resp *s.Request = new(s.Request)
 
@@ -268,7 +268,7 @@ func (r *Repository) GetRequestBy(req *s.Search) ([]*s.Request, error) {
 
 	// set the default offset
 	if req.Offset == 0 {
-		req.Offset = DEFAULT_OFFSET
+		req.Offset = DefaultOffset
 	}
 
 	query = fmt.Sprintf(query, q, req.OrderField, req.OrderType, req.From, req.Offset)
@@ -294,10 +294,10 @@ func (r *Repository) processRows(resp *s.Request, rows *sql.Rows) error {
 	for rows.Next() {
 		aux := new(s.RequestItem)
 
-		err := rows.Scan(&resp.RequestId, &resp.RequestType, &resp.RequestService, &resp.ColectDate, &resp.OrderNr, &resp.SlipNumber, &resp.OriginNome, &resp.OriginLogradouro, &resp.OriginNumero, &resp.OriginComplemento, &resp.OriginCep, &resp.OriginBairro, &resp.OriginCidade,
+		err := rows.Scan(&resp.RequestID, &resp.RequestType, &resp.RequestService, &resp.ColectDate, &resp.OrderNr, &resp.SlipNumber, &resp.OriginNome, &resp.OriginLogradouro, &resp.OriginNumero, &resp.OriginComplemento, &resp.OriginCep, &resp.OriginBairro, &resp.OriginCidade,
 			&resp.OriginUf, &resp.OriginReferencia, &resp.OriginEmail, &resp.OriginDdd, &resp.OriginTelefone, &resp.DestinationNome, &resp.DestinationLogradouro, &resp.DestinationNumero, &resp.DestinationComplemento,
 			&resp.DestinationCep, &resp.DestinationBairro, &resp.DestinationCidade, &resp.DestinationUf, &resp.DestinationReferencia, &resp.DestinationEmail, &resp.Callback, &resp.Status, &resp.ErrorMessage,
-			&resp.Retries, &resp.PostageCode, &resp.TrackingCode, &resp.CreatedAt, &resp.UpdatedAt, &aux.RequestItemId, &aux.FkRequestId, &aux.Item, &aux.ProductName)
+			&resp.Retries, &resp.PostageCode, &resp.TrackingCode, &resp.CreatedAt, &resp.UpdatedAt, &aux.RequestItemID, &aux.FkRequestID, &aux.Item, &aux.ProductName)
 
 		if err != nil {
 			return fmt.Errorf("Error reading rows: %s", err.Error())
@@ -321,17 +321,17 @@ func (r *Repository) processMultipleRows(resp []*s.Request, rows *sql.Rows) ([]*
 		req := new(s.Request)
 		aux := new(s.RequestItem)
 
-		err := rows.Scan(&req.RequestId, &req.RequestType, &req.RequestService, &req.ColectDate, &req.OrderNr, &req.SlipNumber, &req.OriginNome, &req.OriginLogradouro, &req.OriginNumero, &req.OriginComplemento, &req.OriginCep, &req.OriginBairro, &req.OriginCidade,
+		err := rows.Scan(&req.RequestID, &req.RequestType, &req.RequestService, &req.ColectDate, &req.OrderNr, &req.SlipNumber, &req.OriginNome, &req.OriginLogradouro, &req.OriginNumero, &req.OriginComplemento, &req.OriginCep, &req.OriginBairro, &req.OriginCidade,
 			&req.OriginUf, &req.OriginReferencia, &req.OriginEmail, &req.OriginDdd, &req.OriginTelefone, &req.DestinationNome, &req.DestinationLogradouro, &req.DestinationNumero, &req.DestinationComplemento,
 			&req.DestinationCep, &req.DestinationBairro, &req.DestinationCidade, &req.DestinationUf, &req.DestinationReferencia, &req.DestinationEmail, &req.Callback, &req.Status, &req.ErrorMessage,
-			&req.Retries, &req.PostageCode, &req.TrackingCode, &req.CreatedAt, &req.UpdatedAt, &aux.RequestItemId, &aux.FkRequestId, &aux.Item, &aux.ProductName)
+			&req.Retries, &req.PostageCode, &req.TrackingCode, &req.CreatedAt, &req.UpdatedAt, &aux.RequestItemID, &aux.FkRequestID, &aux.Item, &aux.ProductName)
 
 		if err != nil {
 			return resp, fmt.Errorf("Error reading rows: %s", err.Error())
 		}
 
 		// new element
-		if prevId != req.RequestId {
+		if prevId != req.RequestID {
 			//cleanup the items array
 			arr := make([]*s.RequestItem, 0)
 			arr = append(arr, aux)
@@ -339,14 +339,14 @@ func (r *Repository) processMultipleRows(resp []*s.Request, rows *sql.Rows) ([]*
 			//append the item
 			resp = append(resp, req)
 		}
-		if prevId == req.RequestId {
+		if prevId == req.RequestID {
 			//append the items to the previous item
 			l := len(resp)
 			arr = resp[l-1].Items
 			resp[l-1].Items = append(arr, aux)
 		}
 
-		prevId = req.RequestId
+		prevId = req.RequestID
 	}
 
 	return resp, nil

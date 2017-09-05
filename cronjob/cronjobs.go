@@ -42,7 +42,7 @@ func (c *Cronjob) ReprocessRequestsWithError() {
 
 	where := make([]*strut.SearchWhere, 0, 2)
 	where = append(where, &strut.SearchWhere{Field: "retries", Value: strconv.Itoa(int(c.Conf.MaxRetries)), Operator: "<="})
-	where = append(where, &strut.SearchWhere{Field: "status", Value: strut.STATUS_ERROR, Operator: "="})
+	where = append(where, &strut.SearchWhere{Field: "status", Value: strut.StatusError, Operator: "="})
 
 	search := &strut.Search{Where: where}
 
@@ -56,7 +56,7 @@ func (c *Cronjob) ReprocessRequestsWithError() {
 		for _, e := range results {
 			// If we reached MAX retries, do callback to requirer
 			if e.Retries == c.Conf.MaxRetries {
-				go doRequest(&strut.RequestResponse{e.RequestId, e.PostageCode, e.TrackingCode, e.Status, e.Callback})
+				go doRequest(&strut.RequestResponse{e.RequestID, e.PostageCode, e.TrackingCode, e.Status, e.Callback})
 			} else {
 				go c.Hand.DoReverseLogistic(e)
 			}
@@ -81,10 +81,10 @@ func doRequest(e *strut.RequestResponse) {
 
 	// check if it is an https request
 	re := regexp.MustCompile("^https://")
-	useTls := re.MatchString(e.Callback)
+	useTlS := re.MatchString(e.Callback)
 
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: useTls},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: useTlS},
 	}
 	client := &http.Client{Transport: tr}
 	res, err := client.Do(req)

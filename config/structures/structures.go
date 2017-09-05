@@ -16,9 +16,9 @@ type CorreiosConfig struct {
 	Contrato          string `yaml:"contrato,omitempty"`
 	UserReverse       string `yaml:"userReversa,omitempty"`
 	PwReverse         string `yaml:"pwReversa,omitempty"`
-	UrlReverse        string `yaml:"urlReversa,omitempty"`
+	URLReverse        string `yaml:"urlReversa,omitempty"`
 	MaxRetries        int64  `yaml:"maxRetries,omitempty"`
 	UserTracking      string `yaml:"userTracking,omitempty"`
 	PwTracking        string `yaml:"pwTracking,omitempty"`
-	UrlTracking       string `yaml:"urlTracking,omitempty"`
+	URLTracking       string `yaml:"urlTracking,omitempty"`
 }

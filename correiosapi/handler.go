@@ -13,20 +13,20 @@ import (
 )
 
 var (
-	SERVICE_TYPE  = map[string]string{"PAC": "04677", "SEDEX": "41076", "ESEDEX": "81043"}
-	REQUEST_TYPE  = map[string]string{"POSTAGE": "AP", "COLECT": "LR"}
-	COLECT_TYPE   = map[string]string{"PAC": "LR", "SEDEX": "LS", "ESEDEX": "LV"}
-	FOLLOW        = map[string]string{"POSTAGE": "A", "COLECT": "C"}
-	LANGUAGE      = map[string]string{"BR": "101", "EN": "102"}
-	TRACKING_TYPE = map[string]string{"ALL": "T", "LAST": "U"}
+	ServiceTypeMap  = map[string]string{"PAC": "04677", "SEDEX": "41076", "ESEDEX": "81043"}
+	RequestTypeMap  = map[string]string{"POSTAGE": "AP", "COLECT": "LR"}
+	ColectTypeMap   = map[string]string{"PAC": "LR", "SEDEX": "LS", "ESEDEX": "LV"}
+	FollowMap       = map[string]string{"POSTAGE": "A", "COLECT": "C"}
+	LanguageMap     = map[string]string{"BR": "101", "EN": "102"}
+	TrackingTypeMap = map[string]string{"ALL": "T", "LAST": "U"}
 )
 
 const (
-	SOAP_URL        = "SOAP_URL"
-	FOLLOW_PENDING  = "55"
-	FOLLOW_CANCELED = "9"
-	FOLLOW_EXPIRED  = "57"
-	FOLLOW_OK       = "0"
+	SoapURL        = "SoapURL"
+	FollowPending  = "55"
+	FollowCanceled = "9"
+	FollowExpired  = "57"
+	FollowOK       = "0"
 )
 
 type Handler struct {
@@ -35,13 +35,13 @@ type Handler struct {
 }
 
 // Checks in Correios WebServicethe Tracking status of the given objects
-func (h *Handler) TrackObjects(o *strut.Tracking) (error, *strut.TrackingResponse) {
+func (h *Handler) TrackObjects(o *strut.Tracking) (*strut.TrackingResponse, error) {
 	if len(o.Objects) > 0 {
-		client := track.NewRastroWS(h.Conf.UrlTracking, true)
+		client := track.NewRastroWS(h.Conf.URLTracking, true)
 
-		response, err := client.BuscaEventosLista(&track.BuscaEventosLista{User: h.Conf.UserTracking, Password: h.Conf.PwTracking, Type: "L", Result: TRACKING_TYPE[o.TrackingType], Language: LANGUAGE[o.Language], Objects: o.Objects})
+		response, err := client.BuscaEventosLista(&track.BuscaEventosLista{User: h.Conf.UserTracking, Password: h.Conf.PwTracking, Type: "L", Result: TrackingTypeMap[o.TrackingType], Language: LanguageMap[o.Language], Objects: o.Objects})
 		if err != nil {
-			return err, nil
+			return nil, err
 		}
 
 		res := new(strut.TrackingResponse)
@@ -67,7 +67,7 @@ func (h *Handler) TrackObjects(o *strut.Tracking) (error, *strut.TrackingRespons
 			}
 		}
 
-		return nil, res
+		return res, nil
 	}
 
 	return nil, nil
@@ -77,11 +77,11 @@ func (h *Handler) TrackObjects(o *strut.Tracking) (error, *strut.TrackingRespons
 func (h *Handler) FollowReverseLogistic(requestType string) []*strut.RequestResponse {
 	//Init SOAP Client
 	oauth := rever.BasicAuth{Login: h.Conf.UserReverse, Password: h.Conf.PwReverse}
-	client := rever.NewLogisticaReversaWS(h.Conf.UrlReverse, true, &oauth)
+	client := rever.NewLogisticaReversaWS(h.Conf.URLReverse, true, &oauth)
 
 	// Get the Requests that had updates today in Correios
-	current_time := time.Now().Local()
-	response, err := client.AcompanharPedidoPorData(&rever.AcompanharPedidoPorData{CodAdministrativo: h.Conf.CodAdministrativo, TipoSolicitacao: requestType, Data: current_time.Format("02/01/2006")})
+	currentTime := time.Now().Local()
+	response, err := client.AcompanharPedidoPorData(&rever.AcompanharPedidoPorData{CodAdministrativo: h.Conf.CodAdministrativo, TipoSolicitacao: requestType, Data: currentTime.Format("02/01/2006")})
 	if err != nil {
 		fmt.Println(err.Error())
 		return nil
@@ -95,24 +95,24 @@ func (h *Handler) FollowReverseLogistic(requestType string) []*strut.RequestResp
 		for _, col := range response.AcompanharPedidoPorData.Coleta {
 			request, err := h.Repo.GetRequestByPostageCode(strconv.Itoa(col.Numeropedido))
 
-			if err == nil && request.RequestId > 0 {
+			if err == nil && request.RequestID > 0 {
 				switch col.Objeto[0].Ultimostatus {
-				case FOLLOW_CANCELED:
-					af, err2 := h.Repo.UpdateRequestStatus(request, strut.STATUS_CANCELED, col.Objeto[0].Descricaostatus)
+				case FollowCanceled:
+					af, err2 := h.Repo.UpdateRequestStatus(request, strut.StatusCanceled, col.Objeto[0].Descricaostatus)
 					if err2 != nil && af > 0 {
-						toRet = append(toRet, &strut.RequestResponse{request.RequestId, request.PostageCode, request.TrackingCode, strut.STATUS_CANCELED, request.Callback})
+						toRet = append(toRet, &strut.RequestResponse{request.RequestID, request.PostageCode, request.TrackingCode, strut.StatusCanceled, request.Callback})
 					}
 					break
-				case FOLLOW_EXPIRED:
-					af, err2 := h.Repo.UpdateRequestStatus(request, strut.STATUS_EXPIRED, col.Objeto[0].Descricaostatus)
+				case FollowExpired:
+					af, err2 := h.Repo.UpdateRequestStatus(request, strut.StatusExpired, col.Objeto[0].Descricaostatus)
 					if err2 != nil && af > 0 {
-						toRet = append(toRet, &strut.RequestResponse{request.RequestId, request.PostageCode, request.TrackingCode, strut.STATUS_EXPIRED, request.Callback})
+						toRet = append(toRet, &strut.RequestResponse{request.RequestID, request.PostageCode, request.TrackingCode, strut.StatusExpired, request.Callback})
 					}
 					break
-				case FOLLOW_OK:
+				case FollowOK:
 					err2 := h.Repo.UpdateRequestTracking(request, col.Objeto[0].Numeroetiqueta)
 					if err2 != nil {
-						toRet = append(toRet, &strut.RequestResponse{request.RequestId, request.PostageCode, request.TrackingCode, strut.STATUS_USED, request.Callback})
+						toRet = append(toRet, &strut.RequestResponse{request.RequestID, request.PostageCode, request.TrackingCode, strut.StatusUsed, request.Callback})
 					}
 					break
 				default:
@@ -130,7 +130,7 @@ func (h *Handler) FollowReverseLogistic(requestType string) []*strut.RequestResp
 func (h *Handler) DoReverseLogistic(o *strut.Request) {
 
 	//Update the status of the items to Processing
-	_, err := h.Repo.UpdateRequestStatus(o, strut.STATUS_PROCESSING, "")
+	_, err := h.Repo.UpdateRequestStatus(o, strut.StatusProcessing, "")
 	if err != nil {
 		h.saveErrorMessage(o, err.Error())
 		return
@@ -138,10 +138,10 @@ func (h *Handler) DoReverseLogistic(o *strut.Request) {
 
 	//Init SOAP Client
 	oauth := rever.BasicAuth{Login: h.Conf.UserReverse, Password: h.Conf.PwReverse}
-	client := rever.NewLogisticaReversaWS(h.Conf.UrlReverse, true, &oauth)
+	client := rever.NewLogisticaReversaWS(h.Conf.URLReverse, true, &oauth)
 
 	// Get the PostalRange from Correios
-	response, err := client.SolicitarRange(&rever.SolicitarRange{CodAdministrativo: h.Conf.CodAdministrativo, Tipo: REQUEST_TYPE[o.RequestType], Quantidade: "1"})
+	response, err := client.SolicitarRange(&rever.SolicitarRange{CodAdministrativo: h.Conf.CodAdministrativo, Tipo: RequestTypeMap[o.RequestType], Quantidade: "1"})
 	if err != nil {
 		h.saveErrorMessage(o, err.Error())
 		return
@@ -163,7 +163,7 @@ func (h *Handler) DoReverseLogistic(o *strut.Request) {
 		coletas := make([]*rever.ColetaReversa, 1)
 		coletas[0] = cole
 
-		req := rever.SolicitarPostagemReversa(rever.SolicitarPostagemReversa{CodAdministrativo: h.Conf.CodAdministrativo, Codigoservico: SERVICE_TYPE[o.RequestService], Cartao: h.Conf.CartaoPostagem,
+		req := rever.SolicitarPostagemReversa(rever.SolicitarPostagemReversa{CodAdministrativo: h.Conf.CodAdministrativo, Codigoservico: ServiceTypeMap[o.RequestService], Cartao: h.Conf.CartaoPostagem,
 			Destinatario: dest, Coletassolicitadas: coletas})
 		resp, err := client.SolicitarPostagemReversa(&req)
 
@@ -195,17 +195,17 @@ func (h *Handler) DoReverseLogistic(o *strut.Request) {
 		}
 		return
 
-	} else {
-		h.saveErrorMessage(o, "Error range: "+response.SolicitarRange.Coderro+" - "+response.SolicitarRange.Msgerro)
-		return
 	}
+
+	h.saveErrorMessage(o, "Error range: "+response.SolicitarRange.Coderro+" - "+response.SolicitarRange.Msgerro)
+	return
 }
 
 // Performs in Correios WebService a request for a Reverse Postage
 func (h *Handler) CancelReverseLogistic(o *strut.Request) {
 
 	//Update the status of the items to Processing
-	_, err := h.Repo.UpdateRequestStatus(o, strut.STATUS_PROCESSING, "")
+	_, err := h.Repo.UpdateRequestStatus(o, strut.StatusProcessing, "")
 	if err != nil {
 		h.saveErrorMessage(o, err.Error())
 		return
@@ -213,10 +213,10 @@ func (h *Handler) CancelReverseLogistic(o *strut.Request) {
 
 	//Init SOAP Client
 	oauth := rever.BasicAuth{Login: h.Conf.UserReverse, Password: h.Conf.PwReverse}
-	client := rever.NewLogisticaReversaWS(h.Conf.UrlReverse, true, &oauth)
+	client := rever.NewLogisticaReversaWS(h.Conf.URLReverse, true, &oauth)
 
 	// Get the PostalRange from Correios
-	response, err := client.CancelarPedido(&rever.CancelarPedido{CodAdministrativo: h.Conf.CodAdministrativo, NumeroPedido: o.PostageCode, Tipo: FOLLOW[o.RequestService]})
+	response, err := client.CancelarPedido(&rever.CancelarPedido{CodAdministrativo: h.Conf.CodAdministrativo, NumeroPedido: o.PostageCode, Tipo: FollowMap[o.RequestService]})
 	if err != nil {
 		h.saveErrorMessage(o, err.Error())
 		return
@@ -229,8 +229,8 @@ func (h *Handler) CancelReverseLogistic(o *strut.Request) {
 }
 
 func (h *Handler) saveErrorMessage(o *strut.Request, message string) {
-	o.Retries += 1
-	if _, err2 := h.Repo.UpdateRequestStatus(o, strut.STATUS_ERROR, message); err2 != nil {
+	o.Retries++
+	if _, err2 := h.Repo.UpdateRequestStatus(o, strut.StatusError, message); err2 != nil {
 		fmt.Println(err2.Error())
 	}
 	return
@@ -240,19 +240,19 @@ func (h *Handler) saveErrorMessage(o *strut.Request, message string) {
 func buildColetaReversa(o *strut.Request, numero int) *rever.ColetaReversa {
 	r := buildRemetente(o)
 
-	cc := rever.Coleta{Tipo: FOLLOW[o.RequestType], Remetente: r}
-	ob := make([]*rever.Objeto, 0)
+	cc := rever.Coleta{Tipo: FollowMap[o.RequestType], Remetente: r}
+	var ob []*rever.Objeto
 
 	for _, i := range o.Items {
 		obj := new(rever.Objeto)
-		obj.Id = o.SlipNumber
+		obj.ID = o.SlipNumber
 		obj.Desc = i.ProductName
 		obj.Item = "1"
 		ob = append(ob, obj)
 	}
 
 	c := rever.ColetaReversa{Numero: numero, Coleta: &cc, Objcol: ob}
-	if FOLLOW[o.RequestType] == "C" {
+	if FollowMap[o.RequestType] == "C" {
 		c.Ag = o.ColectDate
 	}
 

@@ -13,9 +13,9 @@ It will response via a callback defined by the requester when:
 - When Correios accepted the Collection of the item
 
 # Correios Tracking
-It will response via a callback defined by the requester if:
+It will respond via a callback defined by the requester if:
 - The amount of objects to track is bigger then 5 (this is because of the time that Correios takes to respond)
-If not it will reply in Trackign request
+If not it will reply in the Tracking request
 
 ## Requirements
 App requires Golang 1.8 or later, Glide Package Manager and Docker (for building)
@@ -96,8 +96,13 @@ curl -v -X POST http://127.0.0.1:8080/reverse/ -H 'content-type:application/json
 ```
 ## Configurable parameters
 ```
-request_type -> POSTAGE | COLECT
-request_service -> PAC | SEDEX
+request_type:
+	 POSTAGE
+	 COLECT
+
+request_service
+	PAC
+	SEDEX
 ```
 
 # Update a previous Postage Request
@@ -106,8 +111,13 @@ curl -v -X PUT http://localhost:8080/reverse/1 -H 'content-type:application/json
 ```
 ## Configurable parameters
 ```
-request_type -> POSTAGE | COLECT
-request_service -> PAC | SEDEX
+request_type:
+	 POSTAGE
+	 COLECT
+
+request_service
+	PAC
+	SEDEX
 ```
 
 # Get a Request Information
@@ -126,15 +136,21 @@ curl -v -X POST http://127.0.0.1:8080/reversesearch/ -d '{"from":0,"offset":20}'
 ```
 ## Available Search parameters
 ```
-order_by_field -> the field that we want to order the search for
-order_by_type -> the order type: DESC, ASC
-from -> from value for pagination
-offset -> offset value for pagination
-where -> an array that will contain the multiple where clauses (currently it joins them with AND)
+order_by_field: the field that we want to order the search for
+
+order_by_type: 
+	DESC
+	ASC
+
+from: from value for pagination
+
+offset: offset value for pagination
+
+where : an array that will contain the multiple where clauses (currently it joins them with AND)
   [
-    field -> the field that we want to search for
-    value -> the value of the field that we want to search for
-    operator -> the operator to be used in the search: like, =, >=, <=, <>, IN, NOT IN
+    field: the field that we want to search for
+    value: the value of the field that we want to search for
+    operator: the operator to be used in the search: like, =, >=, <=, <>, IN, NOT IN
   ]
 ```
 
@@ -144,6 +160,10 @@ where -> an array that will contain the multiple where clauses (currently it joi
 ```
 ## Configurable parameters
 ```
+callback: the URL to where it will respond with the status
+
+objects: an array containg the tracking codes (AWB)
+
 tracking_type:
 	ALL -> Retrieves all tracking status of the object
 	LAST -> Retrieves the last tracking status of the object

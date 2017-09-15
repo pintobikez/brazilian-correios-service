@@ -65,6 +65,18 @@ func main() {
 			Usage:  "Expose the swagger file",
 			EnvVar: "SWAGGER_FILE",
 		},
+		cli.StringFlag{
+			Name:   "ssl-cert",
+			Value:  "",
+			Usage:  "Define SSL certificate to accept HTTPS requests",
+			EnvVar: "SSL_CERT",
+		},
+		cli.StringFlag{
+			Name:   "ssl-key",
+			Value:  "",
+			Usage:  "Define SSL key to accept HTTPS requests",
+			EnvVar: "SSL_KEY",
+		},
 	}
 
 	app.Action = Serve

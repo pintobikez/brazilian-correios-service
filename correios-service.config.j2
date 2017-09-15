@@ -10,15 +10,15 @@
 # General
 # -----------------------------------------------------------------------------
 
-# Address and port on which Stock Service will accept HTTP requests.
-LISTEN={{ stock_service_listen | default("0.0.0.0:8000") }}
+# Address and port on which Correios Service will accept HTTP requests.
+LISTEN={{ correios_service_listen | default("0.0.0.0:8000") }}
 
 # Log folder path for access and application logging. Default "stdout".
 LOG_FOLDER=/var/log/correios-service
 
-# If defined the Stock Service will accept only HTTPS requests
-SSL_CERT={{ stock_service_ssl_cert | default("") }}
-SSL_KEY={{ stock_service_ssl_key | default("") }}
+# If defined the Correios Service will accept only HTTPS requests
+SSL_CERT={{ correios_service_ssl_cert | default("") }}
+SSL_KEY={{ correios_service_ssl_key | default("") }}
 
 # -----------------------------------------------------------------------------
 # Datastore

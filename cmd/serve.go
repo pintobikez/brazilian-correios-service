@@ -90,7 +90,7 @@ func Serve(c *cli.Context) error {
 	e.Use(mw.CORSWithConfig(
 		mw.CORSConfig{
 			AllowOrigins: []string{"*"},
-			AllowMethods: []string{echo.POST, echo.GET, echo.HEAD},
+			AllowMethods: []string{echo.POST, echo.GET, echo.DELETE, echo.PUT, echo.HEAD},
 		},
 	))
 
@@ -152,6 +152,15 @@ func Serve(c *cli.Context) error {
 
 // Start http server
 func start(e *srv.Server, c *cli.Context) error {
+
+	if c.String("ssl-cert") != "" && c.String("ssl-key") != "" {
+		return e.StartTLS(
+			c.String("listen"),
+			c.String("ssl-cert"),
+			c.String("ssl-key"),
+		)
+	}
+
 	return e.Start(c.String("listen"))
 }
 func buildCorreiosConfig(filename string) (*strut.CorreiosConfig, error) {

@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	middleware "github.com/dafiti/echo-middleware"
-	inst "github.com/dafiti/go-instrument"
 	"github.com/labstack/echo"
 	mw "github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/color"
@@ -24,12 +22,10 @@ import (
 )
 
 var (
-	instrument inst.Instrument
 	repo       *rep.Repository
 )
 
 func init() {
-	instrument = new(inst.Dummy)
 	repo = new(rep.Repository)
 }
 
@@ -48,15 +44,6 @@ func Serve(c *cli.Context) error {
 	e.Use(mw.Secure())
 	e.Use(mw.RequestID())
 	e.Pre(mw.RemoveTrailingSlash())
-
-	if c.String("newrelic-appname") != "" && c.String("newrelic-license-key") != "" {
-		e.Use(middleware.NewRelic(
-			c.String("newrelic-appname"),
-			c.String("newrelic-license-key"),
-		))
-
-		instrument = new(inst.NewRelic)
-	}
 
 	//loads db connection
 	stringConn, err := buildStringConnection(c.String("database-file"))

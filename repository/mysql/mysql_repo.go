@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	s "github.com/pintobikez/correios-service/api/structures"
+	s "github.com/pintobikez/brazilian-correios-service/api/structures"
 	"strconv"
 )
 

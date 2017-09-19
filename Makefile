@@ -20,7 +20,7 @@ ifeq (${RUN},docker)
         ${DOCKER_IMAGE} sh -c "make OS=${OS} APP_NAME=${APP_NAME} APP_VERSION=${APP_VERSION}"
 else
 	@CGO_ENABLED=0 GOOS=${OS} go build -a ${LDFLAGS} -tags netgo -installsuffix netgo -v \
-    -o ./build/${APP_NAME} github.com/pintobikez/correios-service/cmd
+    -o ./build/${APP_NAME} github.com/pintobikez/brazilian-correios-service/cmd
 endif
 
 clean:

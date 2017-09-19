@@ -1,6 +1,6 @@
 .PHONY: build clean configure depend pack test test-coverage test-report
 
-APP_NAME=correios-service
+APP_NAME=brazilian-correios-service
 APP_PATH=$(shell head -n 1 ./glide.yaml | awk '{print $$2}')
 APP_VERSION=0.0.1
 
@@ -20,7 +20,7 @@ ifeq (${RUN},docker)
         ${DOCKER_IMAGE} sh -c "make OS=${OS} APP_NAME=${APP_NAME} APP_VERSION=${APP_VERSION}"
 else
 	@CGO_ENABLED=0 GOOS=${OS} go build -a ${LDFLAGS} -tags netgo -installsuffix netgo -v \
-    -o ./build/${APP_NAME} github.com/pintobikez/correios-service/cmd
+    -o ./build/${APP_NAME} github.com/pintobikez/brazilian-correios-service/cmd
 endif
 
 clean:

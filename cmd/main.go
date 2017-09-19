@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	appName = "correios-service"
-	version = "0.0.0"
+	appName = "brazilian-correios-service"
+	version = "0.0.1"
 )
 
 func main() {

@@ -5,10 +5,10 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	strut "github.com/pintobikez/correios-service/api/structures"
-	cnf "github.com/pintobikez/correios-service/config/structures"
-	hand "github.com/pintobikez/correios-service/correiosapi"
-	repo "github.com/pintobikez/correios-service/repository"
+	strut "github.com/pintobikez/brazilian-correios-service/api/structures"
+	cnf "github.com/pintobikez/brazilian-correios-service/config/structures"
+	hand "github.com/pintobikez/brazilian-correios-service/correiosapi"
+	repo "github.com/pintobikez/brazilian-correios-service/repository"
 	"log"
 	"net/http"
 	"regexp"
@@ -16,12 +16,12 @@ import (
 )
 
 type Cronjob struct {
-	Repo repo.RepositoryDefinition
+	Repo repo.Definition
 	Conf *cnf.CorreiosConfig
 	Hand *hand.Handler
 }
 
-func New(r repo.RepositoryDefinition, c *cnf.CorreiosConfig) *Cronjob {
+func New(r repo.Definition, c *cnf.CorreiosConfig) *Cronjob {
 	return &Cronjob{Repo: r, Conf: c, Hand: &hand.Handler{Repo: r, Conf: c}}
 }
 

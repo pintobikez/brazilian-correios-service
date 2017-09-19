@@ -1,4 +1,4 @@
-package: github.com/pintobikez/correios-service
+package: github.com/pintobikez/brazilian-correios-service
 import:
 - package: github.com/stretchr/testify
   version: ^1.1.4

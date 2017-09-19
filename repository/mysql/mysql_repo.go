@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	s "github.com/pintobikez/correios-service/api/structures"
+	s "github.com/pintobikez/brazilian-correios-service/api/structures"
 	"strconv"
 )
 
@@ -171,10 +171,10 @@ func (r *Repository) UpdateRequestTracking(o *s.Request, code string) error {
 }
 
 // Finds Request by RequestID
-func (r *Repository) FindRequestById(requestId int64) (bool, error) {
+func (r *Repository) FindRequestByID(requestID int64) (bool, error) {
 	exists := false
 
-	rows, err := r.db.Query("SELECT EXISTS(SELECT * as counter FROM `request` request_id=?) as exist", requestId)
+	rows, err := r.db.Query("SELECT EXISTS(SELECT * as counter FROM `request` request_id=?) as exist", requestID)
 	if err != nil {
 		return false, err
 	}
@@ -189,10 +189,10 @@ func (r *Repository) FindRequestById(requestId int64) (bool, error) {
 }
 
 // Gets Request info by RequestID
-func (r *Repository) GetRequestById(requestId int) (*s.Request, error) {
-	var resp *s.Request = new(s.Request)
+func (r *Repository) GetRequestByID(requestID int) (*s.Request, error) {
+	var resp = new(s.Request)
 
-	rows, err := r.db.Query("SELECT * FROM `request` as o INNER JOIN `request_item` as items on items.fk_request_id=o.request_id WHERE o.request_id=?", requestId)
+	rows, err := r.db.Query("SELECT * FROM `request` as o INNER JOIN `request_item` as items on items.fk_request_id=o.request_id WHERE o.request_id=?", requestID)
 	if err != nil {
 		return resp, err
 	}
@@ -208,7 +208,7 @@ func (r *Repository) GetRequestById(requestId int) (*s.Request, error) {
 
 // Gets Request info by PostageCode
 func (r *Repository) GetRequestByPostageCode(code string) (*s.Request, error) {
-	var resp *s.Request = new(s.Request)
+	var resp = new(s.Request)
 
 	rows, err := r.db.Query("SELECT * FROM `request` as o INNER JOIN `request_item` as oi on oi.fk_request_id=o.request_id WHERE oi.postage_code=?", code)
 	if err != nil {
@@ -226,7 +226,7 @@ func (r *Repository) GetRequestByPostageCode(code string) (*s.Request, error) {
 
 // Gets Request info by ?
 func (r *Repository) GetRequestBy(req *s.Search) ([]*s.Request, error) {
-	var resp []*s.Request = make([]*s.Request, 0)
+	var resp = []*s.Request{}
 
 	query := "SELECT * FROM `request` as o INNER JOIN `request_item` as items on items.fk_request_id=o.request_id %s ORDER BY %s %s LIMIT %d,%d"
 	q := ""
@@ -314,7 +314,7 @@ func (r *Repository) processRows(resp *s.Request, rows *sql.Rows) error {
 func (r *Repository) processMultipleRows(resp []*s.Request, rows *sql.Rows) ([]*s.Request, error) {
 	var (
 		arr    []*s.RequestItem
-		prevId int64 = 0
+		prevID int64
 	)
 
 	for rows.Next() {
@@ -331,22 +331,22 @@ func (r *Repository) processMultipleRows(resp []*s.Request, rows *sql.Rows) ([]*
 		}
 
 		// new element
-		if prevId != req.RequestID {
+		if prevID != req.RequestID {
 			//cleanup the items array
-			arr := make([]*s.RequestItem, 0)
+			var arr = []*s.RequestItem{}
 			arr = append(arr, aux)
 			req.Items = arr
 			//append the item
 			resp = append(resp, req)
 		}
-		if prevId == req.RequestID {
+		if prevID == req.RequestID {
 			//append the items to the previous item
 			l := len(resp)
 			arr = resp[l-1].Items
 			resp[l-1].Items = append(arr, aux)
 		}
 
-		prevId = req.RequestID
+		prevID = req.RequestID
 	}
 
 	return resp, nil

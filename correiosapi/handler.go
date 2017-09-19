@@ -2,11 +2,11 @@ package correiosapi
 
 import (
 	"fmt"
-	strut "github.com/pintobikez/correios-service/api/structures"
-	cnf "github.com/pintobikez/correios-service/config/structures"
-	rever "github.com/pintobikez/correios-service/correiosapi/soapreverse"
-	track "github.com/pintobikez/correios-service/correiosapi/soaptracking"
-	repo "github.com/pintobikez/correios-service/repository"
+	strut "github.com/pintobikez/brazilian-correios-service/api/structures"
+	cnf "github.com/pintobikez/brazilian-correios-service/config/structures"
+	rever "github.com/pintobikez/brazilian-correios-service/correiosapi/soapreverse"
+	track "github.com/pintobikez/brazilian-correios-service/correiosapi/soaptracking"
+	repo "github.com/pintobikez/brazilian-correios-service/repository"
 	"regexp"
 	"strconv"
 	"time"
@@ -30,7 +30,7 @@ const (
 )
 
 type Handler struct {
-	Repo repo.RepositoryDefinition
+	Repo repo.Definition
 	Conf *cnf.CorreiosConfig
 }
 

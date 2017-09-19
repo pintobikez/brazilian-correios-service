@@ -3,4 +3,5 @@ glide.lock
 vendor/
 web/
 build/
-correios-service
+main
+brazilian-correios-service

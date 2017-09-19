@@ -6,13 +6,13 @@ import (
 	mw "github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/color"
 	"github.com/labstack/gommon/log"
-	api "github.com/pintobikez/correios-service/api"
-	uti "github.com/pintobikez/correios-service/config"
-	strut "github.com/pintobikez/correios-service/config/structures"
-	cronjob "github.com/pintobikez/correios-service/cronjob"
-	lg "github.com/pintobikez/correios-service/log"
-	rep "github.com/pintobikez/correios-service/repository/mysql"
-	srv "github.com/pintobikez/correios-service/server"
+	api "github.com/pintobikez/brazilian-correios-service/api"
+	uti "github.com/pintobikez/brazilian-correios-service/config"
+	strut "github.com/pintobikez/brazilian-correios-service/config/structures"
+	cronjob "github.com/pintobikez/brazilian-correios-service/cronjob"
+	lg "github.com/pintobikez/brazilian-correios-service/log"
+	rep "github.com/pintobikez/brazilian-correios-service/repository/mysql"
+	srv "github.com/pintobikez/brazilian-correios-service/server"
 	"github.com/robfig/cron"
 	"gopkg.in/urfave/cli.v1"
 	"os"
@@ -22,7 +22,8 @@ import (
 )
 
 var (
-	repo       *rep.Repository
+	repo        *rep.Repository
+	correiosCnf *strut.CorreiosConfig
 )
 
 func init() {
@@ -39,7 +40,7 @@ func Serve(c *cli.Context) error {
 	e.Logger.SetOutput(lg.File(c.String("log-folder") + "/app.log"))
 
 	// Middlewares
-	e.Use(middleware.LoggerWithOutput(lg.File(c.String("log-folder") + "/access.log")))
+	e.Use(lg.LoggerWithOutput(lg.File(c.String("log-folder") + "/access.log")))
 	e.Use(mw.Recover())
 	e.Use(mw.Secure())
 	e.Use(mw.RequestID())
@@ -59,7 +60,7 @@ func Serve(c *cli.Context) error {
 	defer repo.DisconnectDB()
 
 	//loads correios config
-	correiosCnf, err := buildCorreiosConfig(c.String("correios-file"))
+	err = uti.LoadConfigFile(c.String("correios-file"), correiosCnf)
 	if err != nil {
 		e.Logger.Fatal(err)
 	}
@@ -150,19 +151,10 @@ func start(e *srv.Server, c *cli.Context) error {
 
 	return e.Start(c.String("listen"))
 }
-func buildCorreiosConfig(filename string) (*strut.CorreiosConfig, error) {
-	t := new(strut.CorreiosConfig)
-	err := uti.LoadCorreiosConfigFile(filename, t)
-	if err != nil {
-		return nil, err
-	}
-	return t, nil
-}
 
 func buildStringConnection(filename string) (string, error) {
 	t := new(strut.DbConfig)
-	err := uti.LoadDBConfigFile(filename, t)
-	if err != nil {
+	if err := uti.LoadConfigFile(filename, t); err != nil {
 		return "", err
 	}
 	// [username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]

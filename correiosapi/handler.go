@@ -130,8 +130,7 @@ func (h *Handler) FollowReverseLogistic(requestType string) []*strut.RequestResp
 func (h *Handler) DoReverseLogistic(o *strut.Request) {
 
 	//Update the status of the items to Processing
-	_, err := h.Repo.UpdateRequestStatus(o, strut.StatusProcessing, "")
-	if err != nil {
+	if _, err := h.Repo.UpdateRequestStatus(o, strut.StatusProcessing, ""); err != nil {
 		h.saveErrorMessage(o, err.Error())
 		return
 	}
@@ -205,8 +204,7 @@ func (h *Handler) DoReverseLogistic(o *strut.Request) {
 func (h *Handler) CancelReverseLogistic(o *strut.Request) {
 
 	//Update the status of the items to Processing
-	_, err := h.Repo.UpdateRequestStatus(o, strut.StatusProcessing, "")
-	if err != nil {
+	if _, err := h.Repo.UpdateRequestStatus(o, strut.StatusProcessing, ""); err != nil {
 		h.saveErrorMessage(o, err.Error())
 		return
 	}
@@ -224,6 +222,12 @@ func (h *Handler) CancelReverseLogistic(o *strut.Request) {
 
 	if response.CancelarPedido.Coderro != "" {
 		h.saveErrorMessage(o, response.CancelarPedido.Coderro+" - "+response.CancelarPedido.Msgerro)
+		return
+	}
+
+	//Update the status of the items to Processing
+	if _, err := h.Repo.UpdateRequestStatus(o, strut.StatusCanceled, ""); err != nil {
+		h.saveErrorMessage(o, err.Error())
 		return
 	}
 }

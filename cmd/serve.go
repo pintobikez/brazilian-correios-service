@@ -9,11 +9,11 @@ import (
 	api "github.com/pintobikez/brazilian-correios-service/api"
 	uti "github.com/pintobikez/brazilian-correios-service/config"
 	strut "github.com/pintobikez/brazilian-correios-service/config/structures"
-	cronjob "github.com/pintobikez/brazilian-correios-service/cronjob"
+	//cronjob "github.com/pintobikez/brazilian-correios-service/cronjob"
 	lg "github.com/pintobikez/brazilian-correios-service/log"
 	rep "github.com/pintobikez/brazilian-correios-service/repository/mysql"
 	srv "github.com/pintobikez/brazilian-correios-service/server"
-	"github.com/robfig/cron"
+	//"github.com/robfig/cron"
 	"gopkg.in/urfave/cli.v1"
 	"os"
 	"os/signal"
@@ -28,6 +28,7 @@ var (
 
 func init() {
 	repo = new(rep.Repository)
+	correiosCnf = new(strut.CorreiosConfig)
 }
 
 // Start Http Server
@@ -66,7 +67,7 @@ func Serve(c *cli.Context) error {
 	}
 
 	a := api.New(repo, correiosCnf)
-	cj := cronjob.New(repo, correiosCnf)
+	// cj := cronjob.New(repo, correiosCnf)
 
 	// Routes => api
 	e.POST("/tracking", a.GetTracking())
@@ -116,12 +117,12 @@ func Serve(c *cli.Context) error {
 	}()
 
 	// launch a cron to check everyday for posted items
-	cr := cron.New()
-	cr.AddFunc("* 0 */6 * * *", func() { cj.CheckUpdatedReverses("C") })     // checks for Colect updates
-	cr.AddFunc("* 10 */6 * * *", func() { cj.CheckUpdatedReverses("A") })    // checks for Postage updates
-	cr.AddFunc("* */20 * * * *", func() { cj.ReprocessRequestsWithError() }) // checks for Requests with Error and reprocesses them
-	cr.Start()
-	defer cr.Stop()
+	// cr := cron.New()
+	// cr.AddFunc("* 0 */6 * * *", func() { cj.CheckUpdatedReverses("C") })     // checks for Colect updates
+	// cr.AddFunc("* 10 */6 * * *", func() { cj.CheckUpdatedReverses("A") })    // checks for Postage updates
+	// cr.AddFunc("* */20 * * * *", func() { cj.ReprocessRequestsWithError() }) // checks for Requests with Error and reprocesses them
+	// cr.Start()
+	// defer cr.Stop()
 
 	// Graceful Shutdown
 	quit := make(chan os.Signal)

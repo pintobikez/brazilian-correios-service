@@ -6,15 +6,24 @@ import:
   - assert
 - package: gopkg.in/yaml.v2
 - package: gopkg.in/urfave/cli.v1
-- package: github.com/gorilla/mux
+  version: ^1.20.0
 - package: github.com/go-sql-driver/mysql
+  version: ^1.2
 - package: github.com/pkg/errors
 - package: github.com/coreos/go-systemd/activation
+  version: ^15
 - package: github.com/labstack/echo
+  version: ^2
+  subpackages:
+  - middleware
 - package: github.com/robfig/cron
+  version: ^2
 - package: github.com/dafiti/go-instrument
-- package: github.com/labstack/echo/middleware
-- package: github.com/labstack/gommon/color
-- package: github.com/labstack/gommon/log
+  version: ^0.1.0
+- package: github.com/labstack/gommon
+  version: ^0.2.1
+  subpackages:
+    - log
+    - color
 - package: golang.org/x/text/encoding/charmap
 - package: golang.org/x/text/transform

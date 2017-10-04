@@ -221,7 +221,7 @@ func (a *API) DeleteReverse() echo.HandlerFunc {
 		}
 
 		// Create GO routine to perform Correios request
-		go a.Hand.DoReverseLogistic(res)
+		go a.Hand.CancelReverseLogistic(res)
 
 		return c.JSON(http.StatusOK, res)
 	}

@@ -139,64 +139,42 @@ func (h *Handler) DoReverseLogistic(o *strut.Request) {
 	oauth := rever.BasicAuth{Login: h.Conf.UserReverse, Password: h.Conf.PwReverse}
 	client := rever.NewLogisticaReversaWS(h.Conf.URLReverse, true, &oauth)
 
-	// Get the PostalRange from Correios
-	response, err := client.SolicitarRange(&rever.SolicitarRange{CodAdministrativo: h.Conf.CodAdministrativo, Tipo: RequestTypeMap[o.RequestType], Quantidade: "1"})
+	dest := buildDestinatario(o)
+	// cc, _ := strconv.Atoi(code)
+	cole := buildColetaReversa(o)
+	coletas := make([]*rever.ColetaReversa, 1)
+	coletas[0] = cole
+
+	req := rever.SolicitarPostagemReversa(rever.SolicitarPostagemReversa{CodAdministrativo: h.Conf.CodAdministrativo, Codigoservico: ServiceTypeMap[o.RequestService], Cartao: h.Conf.CartaoPostagem,
+		Destinatario: dest, Coletassolicitadas: coletas})
+	resp, err := client.SolicitarPostagemReversa(&req)
+
 	if err != nil {
 		h.saveErrorMessage(o, err.Error())
 		return
 	}
 
-	// If no ERROR
-	if response.SolicitarRange.Coderro == "0" || response.SolicitarRange.Coderro == "247" {
-		code := strconv.Itoa(response.SolicitarRange.Faixafinal)
-		//Calculate the verifying digit
-		dig, err := calcularDigitoVerificadorStatic(code)
-		if err != nil {
-			h.saveErrorMessage(o, err.Error())
-			return
-		}
-		code += dig
-		dest := buildDestinatario(o)
-		cc, _ := strconv.Atoi(code)
-		cole := buildColetaReversa(o, cc)
-		coletas := make([]*rever.ColetaReversa, 1)
-		coletas[0] = cole
-
-		req := rever.SolicitarPostagemReversa(rever.SolicitarPostagemReversa{CodAdministrativo: h.Conf.CodAdministrativo, Codigoservico: ServiceTypeMap[o.RequestService], Cartao: h.Conf.CartaoPostagem,
-			Destinatario: dest, Coletassolicitadas: coletas})
-		resp, err := client.SolicitarPostagemReversa(&req)
-
-		if err != nil {
-			h.saveErrorMessage(o, err.Error())
-			return
-		}
-
-		if resp.SolicitarPostagemReversa.Coderro != "00" {
-			// Error in the request
-			h.saveErrorMessage(o, resp.SolicitarPostagemReversa.Msgerro)
-			return
-		}
-
-		r := resp.SolicitarPostagemReversa.Resultadosolicitacao[0]
-		// The request has been made before the Numerocoleta is inside the error message
-		if r.Codigoerro == 121 {
-			re := regexp.MustCompile("[0-9]{9}")
-			r.Numerocoleta = re.FindAllString(r.Descricaoerro, 1)[0]
-		}
-		// Error in the result of the request
-		if r.Codigoerro != 0 && r.Codigoerro != 121 {
-			h.saveErrorMessage(o, "Error coleta: "+strconv.Itoa(r.Codigoerro)+" - "+r.Descricaoerro)
-			return
-		}
-		//Update the DB with the Numerocoleta
-		if err2 := h.Repo.UpdateRequestPostage(o, r.Numerocoleta); err != nil {
-			fmt.Println(err2.Error())
-		}
+	if resp.SolicitarPostagemReversa.Coderro != "00" {
+		// Error in the request
+		h.saveErrorMessage(o, resp.SolicitarPostagemReversa.Msgerro)
 		return
-
 	}
 
-	h.saveErrorMessage(o, "Error range: "+response.SolicitarRange.Coderro+" - "+response.SolicitarRange.Msgerro)
+	r := resp.SolicitarPostagemReversa.Resultadosolicitacao[0]
+	// The request has been made before the Numerocoleta is inside the error message
+	if r.Codigoerro == 121 {
+		re := regexp.MustCompile("[0-9]{9}")
+		r.Numerocoleta = re.FindAllString(r.Descricaoerro, 1)[0]
+	}
+	// Error in the result of the request
+	if r.Codigoerro != 0 && r.Codigoerro != 121 {
+		h.saveErrorMessage(o, "Error coleta: "+strconv.Itoa(r.Codigoerro)+" - "+r.Descricaoerro)
+		return
+	}
+	//Update the DB with the Numerocoleta
+	if err2 := h.Repo.UpdateRequestPostage(o, r.Numerocoleta); err != nil {
+		fmt.Println(err2.Error())
+	}
 	return
 }
 
@@ -240,8 +218,24 @@ func (h *Handler) saveErrorMessage(o *strut.Request, message string) {
 	return
 }
 
+func calculateNextCode(msg string, numero int) string {
+	re := regexp.MustCompile("utilizado: (?P<number>[0-9]{1,})")
+	n1 := re.SubexpNames()
+	r2 := re.FindAllStringSubmatch(msg, -1)[0]
+
+	toadd := 0
+	for i, n := range r2 {
+		if n1[i] == "number" {
+			toadd, _ = strconv.Atoi(n)
+		}
+	}
+	numero += toadd
+
+	return strconv.Itoa(numero)
+}
+
 //Builds the ColectaReversa struct
-func buildColetaReversa(o *strut.Request, numero int) *rever.ColetaReversa {
+func buildColetaReversa(o *strut.Request) *rever.ColetaReversa {
 	r := buildRemetente(o)
 
 	cc := rever.Coleta{Tipo: FollowMap[o.RequestType], Remetente: r}
@@ -255,7 +249,7 @@ func buildColetaReversa(o *strut.Request, numero int) *rever.ColetaReversa {
 		ob = append(ob, obj)
 	}
 
-	c := rever.ColetaReversa{Numero: numero, Coleta: &cc, Objcol: ob}
+	c := rever.ColetaReversa{Coleta: &cc, Objcol: ob}
 	if FollowMap[o.RequestType] == "C" {
 		c.Ag = o.ColectDate
 	}

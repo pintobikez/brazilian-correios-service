@@ -1,8 +1,7 @@
 package utils
 
 import (
-	strut "github.com/pintobikez/correios-service/config/structures"
-	errors "github.com/pkg/errors"
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"path/filepath"
@@ -29,23 +28,8 @@ func LoadYamlFile(filename string) ([]byte, error) {
 	return file, nil
 }
 
-// Loads the given Yaml file into a YmlConfig structure
-func LoadDBConfigFile(filename string, c *strut.DbConfig) error {
-
-	file, err := LoadYamlFile(filename)
-	if err != nil {
-		return err
-	}
-
-	if err = yaml.Unmarshal(file, c); err != nil {
-		return errors.Wrap(err, ErrUnableToParseFile)
-	}
-
-	return nil
-}
-
-// Loads the given Yaml file into a YmlConfig structure
-func LoadCorreiosConfigFile(filename string, c *strut.CorreiosConfig) error {
+// Loads the given Yaml file into the Structure
+func LoadConfigFile(filename string, c interface{}) error {
 
 	file, err := LoadYamlFile(filename)
 	if err != nil {

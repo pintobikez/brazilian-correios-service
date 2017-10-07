@@ -27,12 +27,12 @@ var (
 )
 
 type API struct {
-	Repo repo.RepositoryDefinition
+	Repo repo.Definition
 	Conf *cnf.CorreiosConfig
 	Hand *hand.Handler
 }
 
-func New(r repo.RepositoryDefinition, c *cnf.CorreiosConfig) *API {
+func New(r repo.Definition, c *cnf.CorreiosConfig) *API {
 	return &API{Repo: r, Conf: c, Hand: &hand.Handler{Repo: r, Conf: c}}
 }
 
@@ -89,7 +89,7 @@ func (a *API) GetReverse() echo.HandlerFunc {
 		}
 
 		// try to find the request
-		res, err := a.Repo.GetRequestById(requestID)
+		res, err := a.Repo.GetRequestByID(requestID)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, &ErrResponse{ErrContent{http.StatusInternalServerError, err.Error()}})
 		}
@@ -172,7 +172,7 @@ func (a *API) PutReverse() echo.HandlerFunc {
 		}
 
 		// try to find the request
-		found, err := a.Repo.FindRequestById(o.RequestID)
+		found, err := a.Repo.FindRequestByID(o.RequestID)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, &ErrResponse{ErrContent{http.StatusInternalServerError, err.Error()}})
 		}
@@ -211,7 +211,7 @@ func (a *API) DeleteReverse() echo.HandlerFunc {
 		}
 
 		// try to find the request
-		res, err := a.Repo.GetRequestById(requestID)
+		res, err := a.Repo.GetRequestByID(requestID)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, &ErrResponse{ErrContent{http.StatusInternalServerError, err.Error()}})
 		}
@@ -221,7 +221,7 @@ func (a *API) DeleteReverse() echo.HandlerFunc {
 		}
 
 		// Create GO routine to perform Correios request
-		go a.Hand.DoReverseLogistic(res)
+		go a.Hand.CancelReverseLogistic(res)
 
 		return c.JSON(http.StatusOK, res)
 	}

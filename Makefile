@@ -1,6 +1,6 @@
 .PHONY: build clean configure depend pack test test-coverage test-report
 
-APP_NAME=correios-service
+APP_NAME=brazilian-correios-service
 APP_PATH=$(shell head -n 1 ./glide.yaml | awk '{print $$2}')
 APP_VERSION=0.0.1
 

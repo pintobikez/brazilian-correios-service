@@ -1,6 +1,8 @@
 package log
 
 import (
+	"github.com/labstack/echo"
+	mw "github.com/labstack/echo/middleware"
 	"io"
 	"os"
 )
@@ -18,4 +20,11 @@ func File(filePath string) io.Writer {
 	}
 
 	return file
+}
+
+func LoggerWithOutput(w io.Writer) echo.MiddlewareFunc {
+	config := mw.DefaultLoggerConfig
+	config.Output = w
+
+	return mw.LoggerWithConfig(config)
 }

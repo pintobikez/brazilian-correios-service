@@ -16,12 +16,12 @@ import (
 )
 
 type Cronjob struct {
-	Repo repo.RepositoryDefinition
+	Repo repo.Definition
 	Conf *cnf.CorreiosConfig
 	Hand *hand.Handler
 }
 
-func New(r repo.RepositoryDefinition, c *cnf.CorreiosConfig) *Cronjob {
+func New(r repo.Definition, c *cnf.CorreiosConfig) *Cronjob {
 	return &Cronjob{Repo: r, Conf: c, Hand: &hand.Handler{Repo: r, Conf: c}}
 }
 

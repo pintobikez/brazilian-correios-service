@@ -2,7 +2,7 @@ FROM alpine:3.5
 
 LABEL maintainer "pinto.bikez@gmail.com"
 
-ARG APP_NAME=correios-service
+ARG APP_NAME=brazilian-correios-service
 
 RUN apk add --no-cache ca-certificates
 

@@ -395,10 +395,15 @@ func (a *API) ValidateSearchJSON(s *strut.Search) map[string]string {
 	if s.OrderType != "" && s.OrderType != "ASC" && s.OrderType != "DESC" {
 		ret["order_type"] = "must be ASC or DESC"
 	}
+
 	for _, e := range s.Where {
 		e.Operator = strings.ToUpper(e.Operator)
+		e.JoinBy = strings.ToUpper(e.JoinBy)
 		if e.Operator != "" && OperatorValues[e.Operator] {
 			ret["operator"] = fmt.Sprintf(ErrorValidValues, "like, =, >=, <=, <>, IN, NOT IN")
+		}
+		if e.JoinBy != "" && e.JoinBy != "AND"  && e.JoinBy != "OR" {
+			ret["joinby"] = fmt.Sprintf(ErrorValidValues, "AND, OR")
 		}
 	}
 	return ret

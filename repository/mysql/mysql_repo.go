@@ -250,7 +250,11 @@ func (r *Repository) GetRequestBy(req *s.Search) ([]*s.Request, error) {
 				if q == "" {
 					q = "WHERE " + e.Field + " " + e.Operator + " " + e.Value
 				} else {
-					q += " AND " + e.Field + " " + e.Operator + " " + e.Value
+					j := "AND"
+					if e.JoinBy != ""{
+						j = e.JoinBy 
+					}
+					q += " " + j + " " + e.Field + " " + e.Operator + " " + e.Value
 				}
 			}
 		}

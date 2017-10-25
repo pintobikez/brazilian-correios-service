@@ -22,6 +22,7 @@ type SearchWhere struct {
 	Field    string `json:"field"`
 	Value    string `json:"value"`
 	Operator string `json:"operator"`
+	JoinBy   string `json:"joinby"`
 }
 
 type RequestResponse struct {

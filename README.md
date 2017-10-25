@@ -151,6 +151,7 @@ where : an array that will contain the multiple where clauses (currently it join
     field: the field that we want to search for
     value: the value of the field that we want to search for
     operator: the operator to be used in the search: like, =, >=, <=, <>, IN, NOT IN
+    joinby: the operator to be used to join there where conditions: AND, OR
   ]
 ```
 

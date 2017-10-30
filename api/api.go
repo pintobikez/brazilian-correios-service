@@ -411,12 +411,10 @@ func (a *API) ValidateSearchJSON(s *strut.Search) map[string]string {
 
 func buildErrorResponse(err map[string]string) *ErrResponseValidation {
 
-	ret := &ErrResponseValidation{Type: "validation", Errors: make([]*ErrValidation, 0, len(err))}
-	i := 0
+	ret := &ErrResponseValidation{Type: "validation", Errors: make([]*ErrValidation, 0, 0)}
 
 	for k, v := range err {
-		ret.Errors[i] = &ErrValidation{Field: k, Message: v}
-		i++
+		ret.Errors = append(ret.Errors, &ErrValidation{Field: k, Message: v})
 	}
 
 	return ret

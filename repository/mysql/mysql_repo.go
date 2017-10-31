@@ -10,13 +10,13 @@ import (
 
 const DefaultOffset = 50
 
-type Repository struct {
+type MysqlClient struct {
 	//props
 	db *sql.DB
 }
 
 // Connects to the mysql database
-func (r *Repository) ConnectDB(stringConn string) error {
+func (r *MysqlClient) Connect(stringConn string) error {
 	var err error
 	r.db, err = sql.Open("mysql", stringConn)
 	if err != nil {
@@ -26,11 +26,11 @@ func (r *Repository) ConnectDB(stringConn string) error {
 }
 
 // Disconnects from the mysql database
-func (r *Repository) DisconnectDB() {
+func (r *MysqlClient) Disconnect() {
 	r.db.Close()
 }
 
-func (r *Repository) InsertRequest(o *s.Request) error {
+func (r *MysqlClient) InsertRequest(o *s.Request) error {
 
 	stmt, err := r.db.Prepare("INSERT INTO `request` VALUES (null,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'',0,'','',now(),now())")
 	if err != nil {
@@ -67,7 +67,7 @@ func (r *Repository) InsertRequest(o *s.Request) error {
 }
 
 // Updates an RequestItems PostageCode
-func (r *Repository) UpdateRequest(o *s.Request) error {
+func (r *MysqlClient) UpdateRequest(o *s.Request) error {
 
 	stmt, err := r.db.Prepare("UPDATE `request` SET request_type=?, request_service=?, colect_date=?, origin_nome=?, origin_logradouro=?, origin_numero=?, origin_complemento=?, " +
 		"origin_cep=?, origin_bairro=?, origin_cidade=?, origin_uf=?, origin_referencia=?, origin_email=?, origin_ddd=?, origin_telefone=?, destination_nome=?, destination_logradouro=?, destination_numero=?, " +
@@ -90,7 +90,7 @@ func (r *Repository) UpdateRequest(o *s.Request) error {
 }
 
 // Updates an RequestItems status
-func (r *Repository) UpdateRequestStatus(o *s.Request, status string, message string) (int64, error) {
+func (r *MysqlClient) UpdateRequestStatus(o *s.Request, status string, message string) (int64, error) {
 
 	stmt, err := r.db.Prepare("UPDATE `request` SET retries=?, status=?, error_message=? WHERE request_id=?")
 	if err != nil {
@@ -117,7 +117,7 @@ func (r *Repository) UpdateRequestStatus(o *s.Request, status string, message st
 }
 
 // Updates an RequestItems PostageCode
-func (r *Repository) UpdateRequestPostage(o *s.Request, code string) error {
+func (r *MysqlClient) UpdateRequestPostage(o *s.Request, code string) error {
 
 	stmt, err := r.db.Prepare("UPDATE `request` SET postage_code=?,status=? WHERE request_id=?")
 	if err != nil {
@@ -144,7 +144,7 @@ func (r *Repository) UpdateRequestPostage(o *s.Request, code string) error {
 }
 
 // Updates an RequestItems PostageCode
-func (r *Repository) UpdateRequestTracking(o *s.Request, code string) error {
+func (r *MysqlClient) UpdateRequestTracking(o *s.Request, code string) error {
 
 	stmt, err := r.db.Prepare("UPDATE `request` SET tracking_code=?,status=? WHERE request_id=?")
 	if err != nil {
@@ -171,7 +171,7 @@ func (r *Repository) UpdateRequestTracking(o *s.Request, code string) error {
 }
 
 // Finds Request by RequestID
-func (r *Repository) FindRequestByID(requestID int64) (bool, error) {
+func (r *MysqlClient) FindRequestByID(requestID int64) (bool, error) {
 	exists := false
 
 	rows, err := r.db.Query("SELECT EXISTS(SELECT * as counter FROM `request` request_id=?) as exist", requestID)
@@ -189,7 +189,7 @@ func (r *Repository) FindRequestByID(requestID int64) (bool, error) {
 }
 
 // Gets Request info by RequestID
-func (r *Repository) GetRequestByID(requestID int) (*s.Request, error) {
+func (r *MysqlClient) GetRequestByID(requestID int) (*s.Request, error) {
 	var resp = new(s.Request)
 
 	rows, err := r.db.Query("SELECT * FROM `request` as o INNER JOIN `request_item` as items on items.fk_request_id=o.request_id WHERE o.request_id=?", requestID)
@@ -207,7 +207,7 @@ func (r *Repository) GetRequestByID(requestID int) (*s.Request, error) {
 }
 
 // Gets Request info by PostageCode
-func (r *Repository) GetRequestByPostageCode(code string) (*s.Request, error) {
+func (r *MysqlClient) GetRequestByPostageCode(code string) (*s.Request, error) {
 	var resp = new(s.Request)
 
 	rows, err := r.db.Query("SELECT * FROM `request` as o INNER JOIN `request_item` as oi on oi.fk_request_id=o.request_id WHERE oi.postage_code=?", code)
@@ -225,7 +225,7 @@ func (r *Repository) GetRequestByPostageCode(code string) (*s.Request, error) {
 }
 
 // Gets Request info by ?
-func (r *Repository) GetRequestBy(req *s.Search) ([]*s.Request, error) {
+func (r *MysqlClient) GetRequestBy(req *s.Search) ([]*s.Request, error) {
 	var resp = []*s.Request{}
 
 	query := "SELECT * FROM `request` as o INNER JOIN `request_item` as items on items.fk_request_id=o.request_id %s ORDER BY %s %s LIMIT %d,%d"
@@ -251,8 +251,8 @@ func (r *Repository) GetRequestBy(req *s.Search) ([]*s.Request, error) {
 					q = "WHERE " + e.Field + " " + e.Operator + " " + e.Value
 				} else {
 					j := "AND"
-					if e.JoinBy != ""{
-						j = e.JoinBy 
+					if e.JoinBy != "" {
+						j = e.JoinBy
 					}
 					q += " " + j + " " + e.Field + " " + e.Operator + " " + e.Value
 				}
@@ -292,7 +292,7 @@ func (r *Repository) GetRequestBy(req *s.Search) ([]*s.Request, error) {
 }
 
 // Processes a Row result into a Request struct
-func (r *Repository) processRows(resp *s.Request, rows *sql.Rows) error {
+func (r *MysqlClient) processRows(resp *s.Request, rows *sql.Rows) error {
 	var arr []*s.RequestItem
 
 	for rows.Next() {
@@ -315,7 +315,7 @@ func (r *Repository) processRows(resp *s.Request, rows *sql.Rows) error {
 }
 
 // Processes a Row result into a Request struct
-func (r *Repository) processMultipleRows(resp []*s.Request, rows *sql.Rows) ([]*s.Request, error) {
+func (r *MysqlClient) processMultipleRows(resp []*s.Request, rows *sql.Rows) ([]*s.Request, error) {
 	var (
 		arr    []*s.RequestItem
 		prevID int64

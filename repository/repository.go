@@ -3,8 +3,8 @@ package repository
 import s "github.com/pintobikez/brazilian-correios-service/api/structures"
 
 type Definition interface {
-	ConnectDB(stringConn string) error
-	DisconnectDB()
+	Connect(stringConn string) error
+	Disconnect()
 	InsertRequest(object *s.Request) error
 	FindRequestByID(requestID int64) (bool, error)
 	GetRequestBy(req *s.Search) ([]*s.Request, error)

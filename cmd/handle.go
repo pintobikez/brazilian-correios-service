@@ -22,17 +22,17 @@ import (
 )
 
 var (
-	repo        *rep.Repository
+	repo        *rep.MysqlClient
 	correiosCnf *strut.CorreiosConfig
 )
 
 func init() {
-	repo = new(rep.Repository)
+	repo = new(rep.MysqlClient)
 	correiosCnf = new(strut.CorreiosConfig)
 }
 
 // Start Http Server
-func Serve(c *cli.Context) error {
+func Handle(c *cli.Context) error {
 
 	// Echo instance
 	e := &srv.Server{echo.New()}
@@ -54,11 +54,11 @@ func Serve(c *cli.Context) error {
 	}
 
 	// Database connect
-	err = repo.ConnectDB(stringConn)
+	err = repo.Connect(stringConn)
 	if err != nil {
 		e.Logger.Fatal(err)
 	}
-	defer repo.DisconnectDB()
+	defer repo.Disconnect()
 
 	//loads correios config
 	err = uti.LoadConfigFile(c.String("correios-file"), correiosCnf)

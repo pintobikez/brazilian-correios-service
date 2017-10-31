@@ -3,5 +3,6 @@ glide.lock
 vendor/
 web/
 build/
+handle
 main
 brazilian-correios-service

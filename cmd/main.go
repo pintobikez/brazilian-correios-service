@@ -67,7 +67,7 @@ func main() {
 		},
 	}
 
-	app.Action = Serve
+	app.Action = Handle
 
 	app.Run(os.Args)
 }

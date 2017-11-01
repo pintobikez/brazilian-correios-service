@@ -6,3 +6,4 @@ build/
 handle
 main
 brazilian-correios-service
+core.correios.yml.local

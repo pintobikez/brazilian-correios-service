@@ -4,28 +4,35 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
-	"fmt"
 	strut "github.com/pintobikez/brazilian-correios-service/api/structures"
 	cnf "github.com/pintobikez/brazilian-correios-service/config/structures"
 	hand "github.com/pintobikez/brazilian-correios-service/correiosapi"
 	repo "github.com/pintobikez/brazilian-correios-service/repository"
+	"io"
 	"log"
 	"net/http"
 	"regexp"
 	"strconv"
 )
 
+//Cronjob struct
 type Cronjob struct {
 	Repo repo.Definition
 	Conf *cnf.CorreiosConfig
 	Hand *hand.Handler
 }
 
+//New Initializes a new Cronjob struct
 func New(r repo.Definition, c *cnf.CorreiosConfig) *Cronjob {
 	return &Cronjob{Repo: r, Conf: c, Hand: &hand.Handler{Repo: r, Conf: c}}
 }
 
-// Handler to Check if any updates have happened
+//SetOutput sets the output file
+func (c *Cronjob) SetOutput(file io.Writer) {
+	log.SetOutput(file)
+}
+
+//CheckUpdatedReverses Handler to Check if any updates have happened
 func (c *Cronjob) CheckUpdatedReverses(requestType string) {
 	resp := c.Hand.FollowReverseLogistic(requestType)
 
@@ -37,7 +44,7 @@ func (c *Cronjob) CheckUpdatedReverses(requestType string) {
 	}
 }
 
-// Handler to get all Requests with error and retry them again given a Max number of retries
+//ReprocessRequestsWithError Handler to get all Requests with error and retry them again given a Max number of retries
 func (c *Cronjob) ReprocessRequestsWithError() {
 
 	where := make([]*strut.SearchWhere, 0, 2)
@@ -64,7 +71,7 @@ func (c *Cronjob) ReprocessRequestsWithError() {
 	}
 }
 
-// Performs an Http request
+//doRequest Performs an Http request
 func doRequest(e *strut.RequestResponse) {
 	buffer := new(bytes.Buffer)
 	_ = json.NewEncoder(buffer).Encode(e)
@@ -73,7 +80,7 @@ func doRequest(e *strut.RequestResponse) {
 	req, err := http.NewRequest("POST", e.Callback, buffer)
 	if err != nil {
 		// log error
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		return
 	}
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
@@ -90,7 +97,7 @@ func doRequest(e *strut.RequestResponse) {
 	res, err := client.Do(req)
 	if err != nil {
 		// log error
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		return
 	}
 	defer res.Body.Close()

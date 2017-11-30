@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-// Retrieve the io.Writer from a file if exists, otherwise returns a os.Stdout
+//File Retrieve the io.Writer from a file if exists, otherwise returns a os.Stdout
 func File(filePath string) io.Writer {
 	file, err := os.OpenFile(
 		filePath,
@@ -22,6 +22,7 @@ func File(filePath string) io.Writer {
 	return file
 }
 
+//LoggerWithOutput Creates a logger without output Middleware to echo
 func LoggerWithOutput(w io.Writer) echo.MiddlewareFunc {
 	config := mw.DefaultLoggerConfig
 	config.Output = w

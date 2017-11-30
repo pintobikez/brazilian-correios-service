@@ -2,6 +2,7 @@ package repository
 
 import s "github.com/pintobikez/brazilian-correios-service/api/structures"
 
+//Definition Interface definition for this api
 type Definition interface {
 	Connect(stringConn string) error
 	Disconnect()

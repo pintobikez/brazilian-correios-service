@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/xml"
-	// "golang.org/x/text/encoding/charmap"
-	// "golang.org/x/text/transform"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -16,6 +14,7 @@ import (
 var _ time.Time
 var _ xml.Name
 
+//BuscaEventosLista struct
 type BuscaEventosLista struct {
 	XMLName xml.Name `xml:"res:buscaEventosLista"`
 
@@ -27,18 +26,20 @@ type BuscaEventosLista struct {
 	Objects  []string `xml:"objetos,omitempty"`
 }
 
+//BuscaEventosListaResponse struct
 type BuscaEventosListaResponse struct {
 	XMLName xml.Name `xml:"buscaEventosListaResponse"`
-
-	Result *Return `xml:"return,omitempty"`
+	Result  *Return  `xml:"return,omitempty"`
 }
 
+//Return struct
 type Return struct {
 	Version  string    `xml:"versao,omitempty"`
 	Quantity int       `xml:"qtd,omitempty"`
 	Objects  []*Objeto `xml:"objeto,omitempty"`
 }
 
+//Objeto struct
 type Objeto struct {
 	TrackingCode string    `xml:"numero,omitempty"`
 	Error        string    `xml:"erro,omitempty"`
@@ -48,6 +49,7 @@ type Objeto struct {
 	Events       []*Evento `xml:"evento,omitempty"`
 }
 
+//Evento struct
 type Evento struct {
 	Type        string `xml:"tipo,omitempty"`
 	StatusCode  string `xml:"status,omitempty"`
@@ -61,10 +63,12 @@ type Evento struct {
 	FiscalUnit  string `xml:"uf,omitempty"`
 }
 
+//RastroWS struct
 type RastroWS struct {
 	client *SOAPClient
 }
 
+//NewRastroWS new Tracking correios WS client
 func NewRastroWS(url string, tls bool) *RastroWS {
 	if url == "" {
 		url = ""
@@ -76,10 +80,10 @@ func NewRastroWS(url string, tls bool) *RastroWS {
 	}
 }
 
+//BuscaEventosLista Retrieves the tracking events of the given tracking code list
 // Error can be either of the following types:
 //
 //   - ComponenteException
-
 func (service *RastroWS) BuscaEventosLista(request *BuscaEventosLista) (*BuscaEventosListaResponse, error) {
 	response := new(BuscaEventosListaResponse)
 	err := service.client.Call("", request, response)
@@ -92,66 +96,70 @@ func (service *RastroWS) BuscaEventosLista(request *BuscaEventosLista) (*BuscaEv
 
 var timeout = time.Duration(30 * time.Second)
 
+//dialTimeout Sets the timeout of the connection
 func dialTimeout(network, addr string) (net.Conn, error) {
 	return net.DialTimeout(network, addr, timeout)
 }
 
+//SOAPEnvelopeResponse struct
 type SOAPEnvelopeResponse struct {
 	XMLName xml.Name `xml:"Envelope"`
-
-	Body SOAPBodyResponse
+	Body    SOAPBodyResponse
 }
 
+//SOAPBodyResponse struct
 type SOAPBodyResponse struct {
-	XMLName xml.Name `xml:"Body"`
-
+	XMLName xml.Name           `xml:"Body"`
 	Fault   *SOAPFaultResponse `xml:",omitempty"`
 	Content interface{}        `xml:",omitempty"`
 }
 
+//SOAPFaultResponse struct
 type SOAPFaultResponse struct {
 	XMLName xml.Name `xml:"Fault"`
-
-	Code   string `xml:"faultcode,omitempty"`
-	String string `xml:"faultstring,omitempty"`
-	Actor  string `xml:"faultactor,omitempty"`
-	Detail string `xml:"detail,omitempty"`
+	Code    string   `xml:"faultcode,omitempty"`
+	String  string   `xml:"faultstring,omitempty"`
+	Actor   string   `xml:"faultactor,omitempty"`
+	Detail  string   `xml:"detail,omitempty"`
 }
 
+//SOAPEnvelope struct
 type SOAPEnvelope struct {
 	XMLName xml.Name `xml:"soapenv:Envelope"`
 	Tag1    string   `xml:"xmlns:soapenv,attr"`
 	Tag2    string   `xml:"xmlns:res,attr,omitempty"`
-
-	Body SOAPBody
+	Body    SOAPBody
 }
 
+//SOAPHeader struct
 type SOAPHeader struct {
 	XMLName xml.Name `xml:"soapenv:Header"`
-
-	Header interface{}
+	Header  interface{}
 }
 
+//SOAPBody struct
 type SOAPBody struct {
-	XMLName xml.Name `xml:"soapenv:Body"`
-
+	XMLName xml.Name    `xml:"soapenv:Body"`
 	Fault   *SOAPFault  `xml:",omitempty"`
 	Content interface{} `xml:",omitempty"`
 }
 
+//SOAPFault struct
 type SOAPFault struct {
 	XMLName xml.Name `xml:"soapenv:Fault"`
-
-	Code   string `xml:"faultcode,omitempty"`
-	String string `xml:"faultstring,omitempty"`
-	Actor  string `xml:"faultactor,omitempty"`
-	Detail string `xml:"detail,omitempty"`
+	Code    string   `xml:"faultcode,omitempty"`
+	String  string   `xml:"faultstring,omitempty"`
+	Actor   string   `xml:"faultactor,omitempty"`
+	Detail  string   `xml:"detail,omitempty"`
 }
+
+//SOAPClient struct
 type SOAPClient struct {
 	url string
 	tls bool
 }
 
+//UnmarshalXML unmarshal the XML struct
 func (b *SOAPBodyResponse) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	if b.Content == nil {
 		return xml.UnmarshalError("Content must be a pointer to a struct")
@@ -202,13 +210,17 @@ Loop:
 	return nil
 }
 
+//Error returns the SOAPFault error
 func (f *SOAPFault) Error() string {
 	return f.String
 }
+
+//Error returns the SOAPFaultResponse error
 func (f *SOAPFaultResponse) Error() string {
 	return f.String
 }
 
+//NewSOAPClient creates a new SOAP client
 func NewSOAPClient(url string, tls bool) *SOAPClient {
 	return &SOAPClient{
 		url: url,
@@ -216,6 +228,7 @@ func NewSOAPClient(url string, tls bool) *SOAPClient {
 	}
 }
 
+//Call call SOAP method
 func (s *SOAPClient) Call(soapAction string, request, response interface{}) error {
 	envelope := SOAPEnvelope{
 		Tag1: "http://schemas.xmlsoap.org/soap/envelope/",
@@ -276,46 +289,6 @@ func (s *SOAPClient) Call(soapAction string, request, response interface{}) erro
 	if err != nil {
 		return err
 	}
-
-	/*req.Header.Add("Content-Type", "text/xml; charset=\"ISO-8859-1\"")
-	if soapAction != "" {
-		req.Header.Add("SOAPAction", soapAction)
-	}
-
-	req.Close = true
-
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: s.tls,
-		},
-		Dial: dialTimeout,
-	}
-
-	client := &http.Client{Transport: tr}
-	res, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	//Encode to UTF8
-	rInUTF8 := transform.NewReader(res.Body, charmap.ISO8859_1.NewDecoder())
-	rawbody, err := ioutil.ReadAll(rInUTF8)
-	if err != nil {
-		return err
-	}
-	if len(rawbody) == 0 {
-		return nil
-	}
-
-	respEnvelope := new(SOAPEnvelopeResponse)
-	respEnvelope.Body = SOAPBodyResponse{Content: response}
-	err = xml.Unmarshal(rawbody, respEnvelope)
-
-	if err != nil {
-		log.Println(err.Error())
-		return err
-	}*/
 
 	fault := respEnvelope.Body.Fault
 	if fault != nil {

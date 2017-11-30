@@ -3,20 +3,23 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
+	//Use mysql as main package
 	_ "github.com/go-sql-driver/mysql"
 	s "github.com/pintobikez/brazilian-correios-service/api/structures"
 	"strconv"
 )
 
+//DefaultOffset the default offset to be used in pagination
 const DefaultOffset = 50
 
-type MysqlClient struct {
+//Client Mysql Client handler
+type Client struct {
 	//props
 	db *sql.DB
 }
 
-// Connects to the mysql database
-func (r *MysqlClient) Connect(stringConn string) error {
+//Connect Connects to the mysql database
+func (r *Client) Connect(stringConn string) error {
 	var err error
 	r.db, err = sql.Open("mysql", stringConn)
 	if err != nil {
@@ -25,12 +28,13 @@ func (r *MysqlClient) Connect(stringConn string) error {
 	return nil
 }
 
-// Disconnects from the mysql database
-func (r *MysqlClient) Disconnect() {
+//Disconnect Disconnects from the mysql database
+func (r *Client) Disconnect() {
 	r.db.Close()
 }
 
-func (r *MysqlClient) InsertRequest(o *s.Request) error {
+//InsertRequest Creates a PostageCode request in the database
+func (r *Client) InsertRequest(o *s.Request) error {
 
 	stmt, err := r.db.Prepare("INSERT INTO `request` VALUES (null,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'',0,'','',now(),now())")
 	if err != nil {
@@ -66,8 +70,8 @@ func (r *MysqlClient) InsertRequest(o *s.Request) error {
 	return nil
 }
 
-// Updates an RequestItems PostageCode
-func (r *MysqlClient) UpdateRequest(o *s.Request) error {
+//UpdateRequest Updates an RequestItems PostageCode
+func (r *Client) UpdateRequest(o *s.Request) error {
 
 	stmt, err := r.db.Prepare("UPDATE `request` SET request_type=?, request_service=?, colect_date=?, origin_nome=?, origin_logradouro=?, origin_numero=?, origin_complemento=?, " +
 		"origin_cep=?, origin_bairro=?, origin_cidade=?, origin_uf=?, origin_referencia=?, origin_email=?, origin_ddd=?, origin_telefone=?, destination_nome=?, destination_logradouro=?, destination_numero=?, " +
@@ -89,8 +93,8 @@ func (r *MysqlClient) UpdateRequest(o *s.Request) error {
 	return nil
 }
 
-// Updates an RequestItems status
-func (r *MysqlClient) UpdateRequestStatus(o *s.Request, status string, message string) (int64, error) {
+//UpdateRequestStatus Updates an RequestItems status
+func (r *Client) UpdateRequestStatus(o *s.Request, status string, message string) (int64, error) {
 
 	stmt, err := r.db.Prepare("UPDATE `request` SET retries=?, status=?, error_message=? WHERE request_id=?")
 	if err != nil {
@@ -116,8 +120,8 @@ func (r *MysqlClient) UpdateRequestStatus(o *s.Request, status string, message s
 	return affect, nil
 }
 
-// Updates an RequestItems PostageCode
-func (r *MysqlClient) UpdateRequestPostage(o *s.Request, code string) error {
+//UpdateRequestPostage Updates an RequestItems PostageCode
+func (r *Client) UpdateRequestPostage(o *s.Request, code string) error {
 
 	stmt, err := r.db.Prepare("UPDATE `request` SET postage_code=?,status=? WHERE request_id=?")
 	if err != nil {
@@ -143,8 +147,8 @@ func (r *MysqlClient) UpdateRequestPostage(o *s.Request, code string) error {
 	return nil
 }
 
-// Updates an RequestItems PostageCode
-func (r *MysqlClient) UpdateRequestTracking(o *s.Request, code string) error {
+//UpdateRequestTracking Updates an RequestItems PostageCode
+func (r *Client) UpdateRequestTracking(o *s.Request, code string) error {
 
 	stmt, err := r.db.Prepare("UPDATE `request` SET tracking_code=?,status=? WHERE request_id=?")
 	if err != nil {
@@ -170,8 +174,8 @@ func (r *MysqlClient) UpdateRequestTracking(o *s.Request, code string) error {
 	return nil
 }
 
-// Finds Request by RequestID
-func (r *MysqlClient) FindRequestByID(requestID int64) (bool, error) {
+//FindRequestByID Finds Request by RequestID
+func (r *Client) FindRequestByID(requestID int64) (bool, error) {
 	exists := false
 
 	rows, err := r.db.Query("SELECT EXISTS(SELECT * as counter FROM `request` request_id=?) as exist", requestID)
@@ -188,8 +192,8 @@ func (r *MysqlClient) FindRequestByID(requestID int64) (bool, error) {
 	return exists, nil
 }
 
-// Gets Request info by RequestID
-func (r *MysqlClient) GetRequestByID(requestID int) (*s.Request, error) {
+//GetRequestByID Gets Request info by RequestID
+func (r *Client) GetRequestByID(requestID int) (*s.Request, error) {
 	var resp = new(s.Request)
 
 	rows, err := r.db.Query("SELECT * FROM `request` as o INNER JOIN `request_item` as items on items.fk_request_id=o.request_id WHERE o.request_id=?", requestID)
@@ -206,8 +210,8 @@ func (r *MysqlClient) GetRequestByID(requestID int) (*s.Request, error) {
 	return resp, nil
 }
 
-// Gets Request info by PostageCode
-func (r *MysqlClient) GetRequestByPostageCode(code string) (*s.Request, error) {
+//GetRequestByPostageCode Gets Request info by PostageCode
+func (r *Client) GetRequestByPostageCode(code string) (*s.Request, error) {
 	var resp = new(s.Request)
 
 	rows, err := r.db.Query("SELECT * FROM `request` as o INNER JOIN `request_item` as oi on oi.fk_request_id=o.request_id WHERE oi.postage_code=?", code)
@@ -224,8 +228,8 @@ func (r *MysqlClient) GetRequestByPostageCode(code string) (*s.Request, error) {
 	return resp, nil
 }
 
-// Gets Request info by ?
-func (r *MysqlClient) GetRequestBy(req *s.Search) ([]*s.Request, error) {
+//GetRequestBy Gets Request info by ?
+func (r *Client) GetRequestBy(req *s.Search) ([]*s.Request, error) {
 	var resp = []*s.Request{}
 
 	query := "SELECT * FROM `request` as o INNER JOIN `request_item` as items on items.fk_request_id=o.request_id %s ORDER BY %s %s LIMIT %d,%d"
@@ -291,8 +295,8 @@ func (r *MysqlClient) GetRequestBy(req *s.Search) ([]*s.Request, error) {
 	return resp, nil
 }
 
-// Processes a Row result into a Request struct
-func (r *MysqlClient) processRows(resp *s.Request, rows *sql.Rows) error {
+//processRows Processes a Row result into a Request struct
+func (r *Client) processRows(resp *s.Request, rows *sql.Rows) error {
 	var arr []*s.RequestItem
 
 	for rows.Next() {
@@ -314,8 +318,8 @@ func (r *MysqlClient) processRows(resp *s.Request, rows *sql.Rows) error {
 	return nil
 }
 
-// Processes a Row result into a Request struct
-func (r *MysqlClient) processMultipleRows(resp []*s.Request, rows *sql.Rows) ([]*s.Request, error) {
+//processMultipleRows Processes a Row result into a Request struct
+func (r *Client) processMultipleRows(resp []*s.Request, rows *sql.Rows) ([]*s.Request, error) {
 	var (
 		arr    []*s.RequestItem
 		prevID int64

@@ -9,11 +9,9 @@ import (
 	api "github.com/pintobikez/brazilian-correios-service/api"
 	uti "github.com/pintobikez/brazilian-correios-service/config"
 	strut "github.com/pintobikez/brazilian-correios-service/config/structures"
-	cronjob "github.com/pintobikez/brazilian-correios-service/cronjob"
 	lg "github.com/pintobikez/brazilian-correios-service/log"
-	rep "github.com/pintobikez/brazilian-correios-service/repository/mysql"
+	mysql "github.com/pintobikez/brazilian-correios-service/repository/mysql"
 	srv "github.com/pintobikez/brazilian-correios-service/server"
-	"github.com/robfig/cron"
 	"gopkg.in/urfave/cli.v1"
 	"os"
 	"os/signal"
@@ -21,17 +19,7 @@ import (
 	"time"
 )
 
-var (
-	repo        *rep.MysqlClient
-	correiosCnf *strut.CorreiosConfig
-)
-
-func init() {
-	repo = new(rep.MysqlClient)
-	correiosCnf = new(strut.CorreiosConfig)
-}
-
-// Start Http Server
+//Handle Start Http Server
 func Handle(c *cli.Context) error {
 
 	// Echo instance
@@ -54,6 +42,7 @@ func Handle(c *cli.Context) error {
 	}
 
 	// Database connect
+	repo := new(mysql.Client)
 	err = repo.Connect(stringConn)
 	if err != nil {
 		e.Logger.Fatal(err)
@@ -61,13 +50,13 @@ func Handle(c *cli.Context) error {
 	defer repo.Disconnect()
 
 	//loads correios config
+	correiosCnf := new(strut.CorreiosConfig)
 	err = uti.LoadConfigFile(c.String("correios-file"), correiosCnf)
 	if err != nil {
 		e.Logger.Fatal(err)
 	}
 
 	a := api.New(repo, correiosCnf)
-	cj := cronjob.New(repo, correiosCnf)
 
 	// Routes => api
 	e.POST("/tracking", a.GetTracking())
@@ -115,14 +104,6 @@ func Handle(c *cli.Context) error {
 			colorer.Printf(color.Red("⇛ shutting down the server\n"))
 		}
 	}()
-
-	// launch a cron to check everyday for posted items
-	cr := cron.New()
-	cr.AddFunc("* 0 */6 * * *", func() { cj.CheckUpdatedReverses("C") })     // checks for Colect updates
-	cr.AddFunc("* 10 */6 * * *", func() { cj.CheckUpdatedReverses("A") })    // checks for Postage updates
-	cr.AddFunc("* */20 * * * *", func() { cj.ReprocessRequestsWithError() }) // checks for Requests with Error and reprocesses them
-	cr.Start()
-	defer cr.Stop()
 
 	// Graceful Shutdown
 	quit := make(chan os.Signal)

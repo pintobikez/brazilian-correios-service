@@ -1,15 +1,24 @@
 package structures
 
 const (
-	StatusPending    = "pending"
+
+	//StatusPending code
+	StatusPending = "pending"
+	//StatusProcessing code
 	StatusProcessing = "processing"
-	StatusGenerated  = "generated"
-	StatusCanceled   = "canceled"
-	StatusUsed       = "used"
-	StatusExpired    = "expired"
-	StatusError      = "error"
+	//StatusGenerated code
+	StatusGenerated = "generated"
+	//StatusCanceled code
+	StatusCanceled = "canceled"
+	//StatusUsed code
+	StatusUsed = "used"
+	//StatusExpired code
+	StatusExpired = "expired"
+	//StatusError code
+	StatusError = "error"
 )
 
+//Search structure of how the search request must be
 type Search struct {
 	Where      []*SearchWhere `json:"where"`
 	OrderField string         `json:"order_by_field"`
@@ -18,6 +27,7 @@ type Search struct {
 	Offset     int            `json:"offset"`
 }
 
+//SearchWhere structure of how the SearchWhere object must be
 type SearchWhere struct {
 	Field    string `json:"field"`
 	Value    string `json:"value"`
@@ -25,6 +35,7 @@ type SearchWhere struct {
 	JoinBy   string `json:"joinby"`
 }
 
+//RequestResponse structure of how the response is sent to the client
 type RequestResponse struct {
 	RequestID    int64  `json:"request_id"`
 	PostageCode  string `json:"postage_code"`
@@ -33,6 +44,7 @@ type RequestResponse struct {
 	Callback     string `json:"-"`
 }
 
+//Request structure of how a postage request must be done
 type Request struct {
 	RequestID              int64          `json:"request_id"`
 	OrderNr                int64          `json:"order_nr"`
@@ -73,6 +85,7 @@ type Request struct {
 	Items                  []*RequestItem `json:"items"`
 }
 
+//RequestItem structure of how a postage requestItem object must be filled
 type RequestItem struct {
 	RequestItemID int64  `json:"request_item_id"`
 	FkRequestID   int64  `json:"fk_request_id"`
@@ -80,6 +93,7 @@ type RequestItem struct {
 	ProductName   string `json:"product_name"`
 }
 
+//Tracking Request structure of how a tracking request must be called
 type Tracking struct {
 	TrackingType string   `json:"tracking_type"`
 	Callback     string   `json:"callback"`
@@ -87,10 +101,12 @@ type Tracking struct {
 	Objects      []string `json:"objects,omitempty"`
 }
 
+//TrackingResponse structure of how the response of a tracking request is formed
 type TrackingResponse struct {
 	Items []*TrackingHeader `json:"items,omitempty"`
 }
 
+//TrackingHeader structure of how the Tracking Header is sent
 type TrackingHeader struct {
 	Object   string            `json:"object"`
 	Error    string            `json:"error,omitempty"`
@@ -99,6 +115,7 @@ type TrackingHeader struct {
 	Events   []*TrackingEvents `json:"events,omitempty"`
 }
 
+//TrackingEvents structure of how the Tracking Events are sent
 type TrackingEvents struct {
 	Type        string `json:"type,omitempty"`
 	StatusCode  string `json:"status,omitempty"`

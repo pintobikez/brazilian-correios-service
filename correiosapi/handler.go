@@ -13,28 +13,38 @@ import (
 )
 
 var (
-	ServiceTypeMap  = map[string]string{"PAC": "04677", "SEDEX": "41076", "ESEDEX": "81043"}
-	RequestTypeMap  = map[string]string{"POSTAGE": "AP", "COLECT": "LR"}
-	ColectTypeMap   = map[string]string{"PAC": "LR", "SEDEX": "LS", "ESEDEX": "LV"}
-	FollowMap       = map[string]string{"POSTAGE": "A", "COLECT": "C"}
-	LanguageMap     = map[string]string{"BR": "101", "EN": "102"}
+	//ServiceTypeMap map of service types string to int codes
+	ServiceTypeMap = map[string]string{"PAC": "04677", "SEDEX": "41076", "ESEDEX": "81043"}
+	//RequestTypeMap map of service types string to correios codes
+	RequestTypeMap = map[string]string{"POSTAGE": "AP", "COLECT": "LR"}
+	//ColectTypeMap map of service types string to correios codes
+	ColectTypeMap = map[string]string{"PAC": "LR", "SEDEX": "LS", "ESEDEX": "LV"}
+	//FollowMap map of service types string to correios codes
+	FollowMap = map[string]string{"POSTAGE": "A", "COLECT": "C"}
+	//LanguageMap map of service types string to int codes
+	LanguageMap = map[string]string{"BR": "101", "EN": "102"}
+	//TrackingTypeMap map of service types string to correios codes
 	TrackingTypeMap = map[string]string{"ALL": "T", "LAST": "U"}
 )
 
 const (
-	SoapURL        = "SoapURL"
-	FollowPending  = "55"
+	//FollowPending correios code
+	FollowPending = "55"
+	//FollowCanceled correios code
 	FollowCanceled = "9"
-	FollowExpired  = "57"
-	FollowOK       = "0"
+	//FollowExpired correios code
+	FollowExpired = "57"
+	//FollowOK correios code
+	FollowOK = "0"
 )
 
+//Handler struct
 type Handler struct {
 	Repo repo.Definition
 	Conf *cnf.CorreiosConfig
 }
 
-// Checks in Correios WebServicethe Tracking status of the given objects
+//TrackObjects Checks in Correios WebServicethe Tracking status of the given objects
 func (h *Handler) TrackObjects(o *strut.Tracking) (*strut.TrackingResponse, error) {
 	if len(o.Objects) > 0 {
 		client := track.NewRastroWS(h.Conf.URLTracking, true)
@@ -73,7 +83,7 @@ func (h *Handler) TrackObjects(o *strut.Tracking) (*strut.TrackingResponse, erro
 	return nil, nil
 }
 
-// Checks in Correios WebService which requests have changed
+//FollowReverseLogistic Checks in Correios WebService which requests have changed
 func (h *Handler) FollowReverseLogistic(requestType string) []*strut.RequestResponse {
 	//Init SOAP Client
 	oauth := rever.BasicAuth{Login: h.Conf.UserReverse, Password: h.Conf.PwReverse}
@@ -126,7 +136,7 @@ func (h *Handler) FollowReverseLogistic(requestType string) []*strut.RequestResp
 	return nil
 }
 
-// Performs in Correios WebService a request for a Reverse Postage
+//DoReverseLogistic Performs in Correios WebService a request for a Reverse Postage
 func (h *Handler) DoReverseLogistic(o *strut.Request) {
 
 	//Update the status of the items to Processing
@@ -178,7 +188,7 @@ func (h *Handler) DoReverseLogistic(o *strut.Request) {
 	return
 }
 
-// Performs in Correios WebService a request for a Reverse Postage
+//CancelReverseLogistic Performs in Correios WebService a request for a Reverse Postage
 func (h *Handler) CancelReverseLogistic(o *strut.Request) {
 
 	//Update the status of the items to Processing
@@ -210,6 +220,7 @@ func (h *Handler) CancelReverseLogistic(o *strut.Request) {
 	}
 }
 
+//saveErrorMessage Error message
 func (h *Handler) saveErrorMessage(o *strut.Request, message string) {
 	o.Retries++
 	if _, err2 := h.Repo.UpdateRequestStatus(o, strut.StatusError, message); err2 != nil {
@@ -218,23 +229,7 @@ func (h *Handler) saveErrorMessage(o *strut.Request, message string) {
 	return
 }
 
-func calculateNextCode(msg string, numero int) string {
-	re := regexp.MustCompile("utilizado: (?P<number>[0-9]{1,})")
-	n1 := re.SubexpNames()
-	r2 := re.FindAllStringSubmatch(msg, -1)[0]
-
-	toadd := 0
-	for i, n := range r2 {
-		if n1[i] == "number" {
-			toadd, _ = strconv.Atoi(n)
-		}
-	}
-	numero += toadd
-
-	return strconv.Itoa(numero)
-}
-
-//Builds the ColectaReversa struct
+//buildColetaReversa Builds the ColectaReversa struct
 func buildColetaReversa(o *strut.Request) *rever.ColetaReversa {
 	r := buildRemetente(o)
 
@@ -257,7 +252,7 @@ func buildColetaReversa(o *strut.Request) *rever.ColetaReversa {
 	return &c
 }
 
-//Builds the Destinatorio struct
+//buildDestinatario Builds the Destinatorio struct
 func buildDestinatario(o *strut.Request) *rever.Pessoa {
 	p := rever.Pessoa{
 		Nome:        o.DestinationNome,
@@ -277,7 +272,7 @@ func buildDestinatario(o *strut.Request) *rever.Pessoa {
 	return &p
 }
 
-//Builds the Remetente struct
+//buildRemetente Builds the Remetente struct
 func buildRemetente(o *strut.Request) *rever.Remetente {
 	p := rever.Pessoa{
 		Nome:        o.OriginNome,
@@ -297,34 +292,4 @@ func buildRemetente(o *strut.Request) *rever.Remetente {
 	r := rever.Remetente{Pessoa: &p}
 
 	return &r
-}
-
-// Calculates the verifying digit of a postage code
-func calcularDigitoVerificadorStatic(eticket string) (string, error) {
-	multipliers := [8]int{8, 6, 4, 2, 3, 5, 9, 7}
-	sum := 0
-	dv := 0
-
-	if len(eticket) != 8 {
-		return strconv.Itoa(dv), fmt.Errorf("e-ticket need have 8 digits")
-	}
-
-	for k, v := range multipliers {
-		a := string(eticket[k])
-		b, _ := strconv.Atoi(a)
-		sum += b * v
-	}
-
-	remainder := sum % 11
-
-	switch remainder {
-	case 0:
-		dv = 5
-	case 1:
-		dv = 0
-	default:
-		dv = 11 - remainder
-	}
-
-	return strconv.Itoa(dv), nil
 }

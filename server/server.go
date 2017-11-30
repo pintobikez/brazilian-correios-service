@@ -5,13 +5,12 @@ import (
 	"github.com/labstack/echo"
 )
 
-type (
-	Server struct {
-		*echo.Echo
-	}
-)
+//Server struct
+type Server struct {
+	*echo.Echo
+}
 
-// Start starts an HTTP server.
+//Start starts an HTTP server.
 func (srv *Server) Start(address string) error {
 
 	listeners, err := activation.Listeners(true)

@@ -128,7 +128,7 @@ type SOAPEnvelope struct {
 	XMLName xml.Name `xml:"soapenv:Envelope"`
 	Tag1    string   `xml:"xmlns:soapenv,attr"`
 	Tag2    string   `xml:"xmlns:res,attr,omitempty"`
-	Body SOAPBody
+	Body    SOAPBody
 }
 
 //SOAPHeader struct
@@ -216,7 +216,6 @@ func (f *SOAPFaultResponse) Error() string {
 }
 
 //NewSOAPClient creates a new SOAP client
->>>>>>> 6fd4253fa35eda9bb14e9c1e548abba73ac7caea
 func NewSOAPClient(url string, tls bool) *SOAPClient {
 	return &SOAPClient{
 		url: url,

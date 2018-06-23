@@ -6,7 +6,6 @@ import (
 )
 
 type (
-
 	//ErrResponse main struct for error handling
 	ErrResponse struct {
 		Error ErrContent `json:"error"`

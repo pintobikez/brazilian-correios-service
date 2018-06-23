@@ -16,27 +16,35 @@ import (
 	"strings"
 )
 
+//Regex to validate date formats
 const DateRegex = "(^(((0[1-9]|1[0-9]|2[0-8])[/](0[1-9]|1[012]))|((29|30|31)[/](0[13578]|1[02]))|((29|30)[/](0[4,6,9]|11)))[/](19|[2-9][0-9])$)|(^29[/]02[/](19|[2-9][0-9])(00|04|08|12|16|20|24|28|32|36|40|44|48|52|56|60|64|68|72|76|80|84|88|92|96)$)"
 
 var (
-	OperatorValues   = map[string]bool{"LIKE": true, "=": true, ">=": true, "<=": true, "<>": true, "!=": true, "IN": true, "NOT IN": true}
-	RequestNotFound  = "Request with ID: %d not found"
-	ErrorNotSet      = "%s not set"
-	ErrorIsEmpty     = "is empty"
+	//OperatorValues Values that can be used in the operators
+	OperatorValues = map[string]bool{"LIKE": true, "=": true, ">=": true, "<=": true, "<>": true, "!=": true, "IN": true, "NOT IN": true}
+	//RequestNotFound request not found message
+	RequestNotFound = "Request with ID: %d not found"
+	//ErrorNotSet field not set message
+	ErrorNotSet = "%s not set"
+	//ErrorIsEmpty field empty message
+	ErrorIsEmpty = "is empty"
+	//ErrorValidValues field with invalid values message
 	ErrorValidValues = "valid values are: %s"
 )
 
+//API struct
 type API struct {
 	Repo repo.Definition
 	Conf *cnf.CorreiosConfig
 	Hand *hand.Handler
 }
 
+//New method to create a new API struct
 func New(r repo.Definition, c *cnf.CorreiosConfig) *API {
 	return &API{Repo: r, Conf: c, Hand: &hand.Handler{Repo: r, Conf: c}}
 }
 
-// Handler to Get Tracking information
+//GetTracking Handler to retrieve Tracking information
 func (a *API) GetTracking() echo.HandlerFunc {
 	return func(c echo.Context) error {
 
@@ -74,7 +82,7 @@ func (a *API) GetTracking() echo.HandlerFunc {
 	}
 }
 
-// Handler to GET Reverse information of a request
+//GetReverse Handler to GET Reverse information of a request
 func (a *API) GetReverse() echo.HandlerFunc {
 	return func(c echo.Context) error {
 
@@ -103,7 +111,7 @@ func (a *API) GetReverse() echo.HandlerFunc {
 	}
 }
 
-// Handler to GET Reverse information for N Requests
+//GetReversesBy Handler to GET Reverse information for N Requests
 func (a *API) GetReversesBy() echo.HandlerFunc {
 	return func(c echo.Context) error {
 
@@ -128,7 +136,7 @@ func (a *API) GetReversesBy() echo.HandlerFunc {
 	}
 }
 
-// Handler to POST a Correios Reverse request
+//PostReverse Handler to POST a Correios Reverse request
 func (a *API) PostReverse() echo.HandlerFunc {
 	return func(c echo.Context) error {
 
@@ -157,7 +165,7 @@ func (a *API) PostReverse() echo.HandlerFunc {
 	}
 }
 
-// Handler to PUT a Correios Reverse request
+//PutReverse Handler to PUT a Correios Reverse request
 func (a *API) PutReverse() echo.HandlerFunc {
 	return func(c echo.Context) error {
 
@@ -196,7 +204,7 @@ func (a *API) PutReverse() echo.HandlerFunc {
 	}
 }
 
-// Handler to DELETE a Correios Reverse request
+//DeleteReverse Handler to DELETE a Correios Reverse request
 func (a *API) DeleteReverse() echo.HandlerFunc {
 	return func(c echo.Context) error {
 
@@ -228,7 +236,7 @@ func (a *API) DeleteReverse() echo.HandlerFunc {
 	}
 }
 
-// Validates the consistency of the Tracking struct
+//ValidateTrackingJSON Validates the consistency of the Tracking struct
 func (a *API) ValidateTrackingJSON(s *strut.Tracking) map[string]string {
 
 	ret := make(map[string]string)
@@ -267,7 +275,7 @@ func (a *API) ValidateTrackingJSON(s *strut.Tracking) map[string]string {
 	return ret
 }
 
-// Validates the consistency of the Request struct
+//ValidatePutJSON Validates the consistency of the Request struct
 func (a *API) ValidatePutJSON(s *strut.Request) map[string]string {
 
 	ret := make(map[string]string)
@@ -381,7 +389,7 @@ func (a *API) ValidatePutJSON(s *strut.Request) map[string]string {
 	return ret
 }
 
-// Validates the consistency of the Search struct
+//ValidateSearchJSON Validates the consistency of the Search struct
 func (a *API) ValidateSearchJSON(s *strut.Search) map[string]string {
 
 	s.OrderType = strings.ToUpper(s.OrderType)
@@ -410,20 +418,19 @@ func (a *API) ValidateSearchJSON(s *strut.Search) map[string]string {
 	return ret
 }
 
+//buildErrorResponse creates an Error response object given a map of strings
 func buildErrorResponse(err map[string]string) *ErrResponseValidation {
 
-	ret := &ErrResponseValidation{Type: "validation", Errors: make([]*ErrValidation, 0, len(err))}
-	i := 0
+	ret := &ErrResponseValidation{Type: "validation", Errors: make([]*ErrValidation, 0, 0)}
 
 	for k, v := range err {
-		ret.Errors[i] = &ErrValidation{Field: k, Message: v}
-		i++
+		ret.Errors = append(ret.Errors, &ErrValidation{Field: k, Message: v})
 	}
 
 	return ret
 }
 
-// Performs an Http request
+//doCallbackRequest Performs an Http request to the defined callback
 func doCallbackRequest(e *strut.TrackingResponse, url string) {
 	buffer := new(bytes.Buffer)
 	_ = json.NewEncoder(buffer).Encode(e)

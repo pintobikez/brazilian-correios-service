@@ -7,13 +7,17 @@ import (
 	"path/filepath"
 )
 
-var (
-	ErrInvalidFile       = "Invalid file absolute path"
-	ErrUnableToReadFile  = "Unable to read the file storage"
+// Loads a Yaml file and returns it
+const (
+	//ErrInvalidFile message
+	ErrInvalidFile = "Invalid file absolute path"
+	//ErrUnableToReadFile message
+	ErrUnableToReadFile = "Unable to read the file storage"
+	//ErrUnableToParseFile message
 	ErrUnableToParseFile = "Unable to parse the file storage"
 )
 
-// Loads a Yaml file and returns it
+//LoadYamlFile Loads a Yaml file and returns it
 func LoadYamlFile(filename string) ([]byte, error) {
 	filename, err := filepath.Abs(filename)
 	if err != nil {
@@ -28,7 +32,7 @@ func LoadYamlFile(filename string) ([]byte, error) {
 	return file, nil
 }
 
-// Loads the given Yaml file into the Structure
+//LoadConfigFile Loads the given Yaml file into the Structure
 func LoadConfigFile(filename string, c interface{}) error {
 
 	file, err := LoadYamlFile(filename)

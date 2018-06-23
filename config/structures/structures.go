@@ -1,5 +1,6 @@
 package structures
 
+//DbConfig contains the database configuration
 type DbConfig struct {
 	Driver struct {
 		Host   string `yaml:"host,omitempty"`
@@ -10,6 +11,7 @@ type DbConfig struct {
 	}
 }
 
+//CorreiosConfig contains the correios configuration
 type CorreiosConfig struct {
 	CartaoPostagem    string `yaml:"cartaoPostagem,omitempty"`
 	CodAdministrativo string `yaml:"codAdministrativo,omitempty"`

@@ -7,7 +7,7 @@ import (
 
 var (
 	appName = "brazilian-correios-service"
-	version = "0.0.1"
+	version = "0.0.2"
 )
 
 func main() {
@@ -36,7 +36,7 @@ func main() {
 			EnvVar: "REVISION_FILE",
 		},
 		cli.StringFlag{
-			Name:   "database-file",
+			Name:   "database-file, db",
 			Value:  "",
 			Usage:  "Database configuration used by Correios Service to connect to database",
 			EnvVar: "DATABASE_FILE",
@@ -67,7 +67,35 @@ func main() {
 		},
 	}
 
-	app.Action = Serve
+	// crons controller
+	app.Commands = []cli.Command{
+		cli.Command{
+			Name:   "cronjobs, c",
+			Usage:  "Runs the crons needed for the service",
+			Action: CronController,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:   "database-file, db",
+					Value:  "",
+					Usage:  "Database configuration used by Correios Service to connect to database",
+					EnvVar: "DATABASE_FILE",
+				},
+				cli.StringFlag{
+					Name:   "correios-file",
+					Value:  "",
+					Usage:  "Correios configuration used by Correios Service to connect to Correios",
+					EnvVar: "CORREIOS_FILE",
+				},
+				cli.StringFlag{
+					Name:   "log-folder, lf",
+					Value:  "",
+					Usage:  `Log folder path for access and application logging. Default "stdout"`,
+					EnvVar: "LOG_FOLDER",
+				},
+			},
+		},
+	}
 
+	app.Action = Handle
 	app.Run(os.Args)
 }

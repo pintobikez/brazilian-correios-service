@@ -251,8 +251,8 @@ func (r *Repository) GetRequestBy(req *s.Search) ([]*s.Request, error) {
 					q = "WHERE " + e.Field + " " + e.Operator + " " + e.Value
 				} else {
 					j := "AND"
-					if e.JoinBy != ""{
-						j = e.JoinBy 
+					if e.JoinBy != "" {
+						j = e.JoinBy
 					}
 					q += " " + j + " " + e.Field + " " + e.Operator + " " + e.Value
 				}

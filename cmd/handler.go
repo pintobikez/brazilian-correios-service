@@ -9,11 +9,9 @@ import (
 	api "github.com/pintobikez/brazilian-correios-service/api"
 	uti "github.com/pintobikez/brazilian-correios-service/config"
 	strut "github.com/pintobikez/brazilian-correios-service/config/structures"
-	cronjob "github.com/pintobikez/brazilian-correios-service/cronjob"
 	lg "github.com/pintobikez/brazilian-correios-service/log"
-	rep "github.com/pintobikez/brazilian-correios-service/repository/mysql"
+	mysql "github.com/pintobikez/brazilian-correios-service/repository/mysql"
 	srv "github.com/pintobikez/brazilian-correios-service/server"
-	"github.com/robfig/cron"
 	"gopkg.in/urfave/cli.v1"
 	"os"
 	"os/signal"
@@ -21,18 +19,8 @@ import (
 	"time"
 )
 
-var (
-	repo        *rep.Repository
-	correiosCnf *strut.CorreiosConfig
-)
-
-func init() {
-	repo = new(rep.Repository)
-	correiosCnf = new(strut.CorreiosConfig)
-}
-
-// Start Http Server
-func Serve(c *cli.Context) error {
+//Handle Start Http Server
+func Handle(c *cli.Context) error {
 
 	// Echo instance
 	e := &srv.Server{echo.New()}
@@ -54,20 +42,21 @@ func Serve(c *cli.Context) error {
 	}
 
 	// Database connect
-	err = repo.ConnectDB(stringConn)
+	repo := new(mysql.Client)
+	err = repo.Connect(stringConn)
 	if err != nil {
 		e.Logger.Fatal(err)
 	}
-	defer repo.DisconnectDB()
+	defer repo.Disconnect()
 
 	//loads correios config
+	correiosCnf := new(strut.CorreiosConfig)
 	err = uti.LoadConfigFile(c.String("correios-file"), correiosCnf)
 	if err != nil {
 		e.Logger.Fatal(err)
 	}
 
 	a := api.New(repo, correiosCnf)
-	cj := cronjob.New(repo, correiosCnf)
 
 	// Routes => api
 	e.POST("/tracking", a.GetTracking())
@@ -115,15 +104,6 @@ func Serve(c *cli.Context) error {
 			colorer.Printf(color.Red("⇛ shutting down the server\n"))
 		}
 	}()
-
-	// launch a cron to check everyday for posted items
-	cr := cron.New()
-	cr.AddFunc("* 0 */6 * * *", func() { cj.CheckUpdatedReverses("C") })     // checks for Colect updates
-	cr.AddFunc("* 10 */6 * * *", func() { cj.CheckUpdatedReverses("A") })    // checks for Postage updates
-	cr.AddFunc("* */20 * * * *", func() { cj.ReprocessRequestsWithError() }) // checks for Requests with Error and reprocesses them
-	cr.AddFunc("* */60 * * * *", func() { cj.CheckUsedReverses(0, 1000) })   // checks if Requests have been delivered
-	cr.Start()
-	defer cr.Stop()
 
 	// Graceful Shutdown
 	quit := make(chan os.Signal)

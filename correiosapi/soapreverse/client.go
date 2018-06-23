@@ -17,6 +17,7 @@ import (
 var _ time.Time
 var _ xml.Name
 
+//AcompanharPedidoPorData struct
 type AcompanharPedidoPorData struct {
 	XMLName xml.Name `xml:"ns1:acompanharPedidoPorData"`
 
@@ -25,12 +26,14 @@ type AcompanharPedidoPorData struct {
 	Data              string `xml:"data,omitempty"`
 }
 
+//AcompanharPedidoPorDataResponse struct
 type AcompanharPedidoPorDataResponse struct {
 	XMLName xml.Name `xml:"acompanharPedidoPorDataResponse"`
 
 	AcompanharPedidoPorData *RetornoAcompanhamento `xml:"acompanharPedidoPorData,omitempty"`
 }
 
+//RetornoAcompanhamento struct
 type RetornoAcompanhamento struct {
 	Codigoadministrativo string                `xml:"codigo_administrativo,omitempty"`
 	Tiposolicitacao      string                `xml:"tipo_solicitacao,omitempty"`
@@ -41,6 +44,7 @@ type RetornoAcompanhamento struct {
 	Msgerro              string                `xml:"msg_erro,omitempty"`
 }
 
+//ColetasSolicitadas struct
 type ColetasSolicitadas struct {
 	Numeropedido    int                `xml:"numero_pedido,omitempty"`
 	Controlecliente string             `xml:"controle_cliente,omitempty"`
@@ -48,6 +52,7 @@ type ColetasSolicitadas struct {
 	Objeto          []*ObjetoPostal    `xml:"objeto,omitempty"`
 }
 
+//HistoricoColeta struct
 type HistoricoColeta struct {
 	Status          int    `xml:"status,omitempty"`
 	Descricaostatus string `xml:"descricao_status,omitempty"`
@@ -56,6 +61,7 @@ type HistoricoColeta struct {
 	Observacao      string `xml:"observacao,omitempty"`
 }
 
+//ObjetoPostal struct
 type ObjetoPostal struct {
 	Numeroetiqueta        string `xml:"numero_etiqueta,omitempty"`
 	Controleobjetocliente string `xml:"controle_objeto_cliente,omitempty"`
@@ -68,14 +74,7 @@ type ObjetoPostal struct {
 	Valorpostagem         string `xml:"valor_postagem,omitempty"`
 }
 
-type WebServiceFaultInfo struct {
-	Mensagem      string `xml:"mensagem,omitempty"`
-	Excecao       string `xml:"excecao,omitempty"`
-	Classificacao string `xml:"classificacao,omitempty"`
-	Causa         string `xml:"causa,omitempty"`
-	StackTrace    string `xml:"stackTrace,omitempty"`
-}
-
+//SolicitarPostagemReversa struct
 type SolicitarPostagemReversa struct {
 	XMLName xml.Name `xml:"ns1:solicitarPostagemReversa"`
 
@@ -86,6 +85,7 @@ type SolicitarPostagemReversa struct {
 	Coletassolicitadas []*ColetaReversa `xml:"coletas_solicitadas,omitempty"`
 }
 
+//Pessoa struct
 type Pessoa struct {
 	Nome        string `xml:"nome,omitempty"`
 	Logradouro  string `xml:"logradouro,omitempty"`
@@ -101,6 +101,7 @@ type Pessoa struct {
 	Email       string `xml:"email,omitempty"`
 }
 
+//ColetaReversa struct
 type ColetaReversa struct {
 	*Coleta
 
@@ -112,6 +113,7 @@ type ColetaReversa struct {
 	Objcol           []*Objeto `xml:"obj_col,omitempty"`
 }
 
+//Coleta struct
 type Coleta struct {
 	Tipo           string     `xml:"tipo,omitempty"`
 	Idcliente      string     `xml:"id_cliente,omitempty"`
@@ -123,6 +125,7 @@ type Coleta struct {
 	Produto        []*Produto `xml:"produto,omitempty"`
 }
 
+//Objeto struct
 type Objeto struct {
 	Item    string `xml:"item,omitempty"`
 	Desc    string `xml:"desc,omitempty"`
@@ -131,27 +134,29 @@ type Objeto struct {
 	ID      string `xml:"id,omitempty"`
 }
 
+//Remetente struct
 type Remetente struct {
 	*Pessoa
-
 	Identificacao string `xml:"identificacao,omitempty"`
 	Dddcelular    string `xml:"ddd_celular,omitempty"`
 	Celular       string `xml:"celular,omitempty"`
 	Sms           string `xml:"sms,omitempty"`
 }
 
+//Produto struct
 type Produto struct {
 	Codigo string `xml:"codigo,omitempty"`
 	Tipo   string `xml:"tipo,omitempty"`
 	Qtd    string `xml:"qtd,omitempty"`
 }
 
+//SolicitarPostagemReversaResponse struct
 type SolicitarPostagemReversaResponse struct {
-	XMLName xml.Name `xml:"solicitarPostagemReversaResponse"`
-
+	XMLName                  xml.Name         `xml:"solicitarPostagemReversaResponse"`
 	SolicitarPostagemReversa *RetornoPostagem `xml:"solicitarPostagemReversa,omitempty"`
 }
 
+//RetornoPostagem struct
 type RetornoPostagem struct {
 	Statusprocessamento  string                  `xml:"status_processamento,omitempty"`
 	Dataprocessamento    string                  `xml:"data_processamento,omitempty"`
@@ -161,6 +166,7 @@ type RetornoPostagem struct {
 	Resultadosolicitacao []*ResultadoSolicitacao `xml:"resultado_solicitacao,omitempty"`
 }
 
+//ResultadoSolicitacao struct
 type ResultadoSolicitacao struct {
 	Tipo            string `xml:"tipo,omitempty"`
 	Idcliente       string `xml:"id_cliente,omitempty"`
@@ -175,92 +181,7 @@ type ResultadoSolicitacao struct {
 	Descricaoerro   string `xml:"descricao_erro,omitempty"`
 }
 
-type ValidarPostagemSimultanea struct {
-	XMLName xml.Name `xml:"ns1:validarPostagemSimultanea"`
-
-	CodAdministrativo string            `xml:"codAdministrativo,omitempty"`
-	Codigoservico     string            `xml:"codigo_servico,omitempty"`
-	Cartao            string            `xml:"cartao,omitempty"`
-	Cepdestinatario   string            `xml:"cep_destinatario,omitempty"`
-	Coleta            *ColetaSimultanea `xml:"coleta,omitempty"`
-}
-
-type ColetaSimultanea struct {
-	*Coleta
-
-	Obs string `xml:"obs,omitempty"`
-	Obj string `xml:"obj,omitempty"`
-}
-
-type ValidarPostagemSimultaneaResponse struct {
-	XMLName xml.Name `xml:"validarPostagemSimultaneaResponse"`
-
-	ValidarPostagemSimultanea *RetornoValidacao `xml:"validarPostagemSimultanea,omitempty"`
-}
-
-type RetornoValidacao struct {
-	Coderro int    `xml:"cod_erro,omitempty"`
-	Msgerro string `xml:"msg_erro,omitempty"`
-}
-
-type AcompanharPedido struct {
-	XMLName xml.Name `xml:"ns1:acompanharPedido"`
-
-	CodAdministrativo string   `xml:"codAdministrativo,omitempty"`
-	TipoBusca         string   `xml:"tipoBusca,omitempty"`
-	TipoSolicitacao   string   `xml:"tipoSolicitacao,omitempty"`
-	NumeroPedido      []string `xml:"numeroPedido,omitempty"`
-}
-
-type AcompanharPedidoResponse struct {
-	XMLName xml.Name `xml:"acompanharPedidoResponse"`
-
-	AcompanharPedido *RetornoAcompanhamento `xml:"acompanharPedido,omitempty"`
-}
-
-type RevalidarPrazoAutorizacaoPostagem struct {
-	XMLName xml.Name `xml:"ns1:revalidarPrazoAutorizacaoPostagem"`
-
-	CodAdministrativo string `xml:"codAdministrativo,omitempty"`
-	NumeroPedido      string `xml:"numeroPedido,omitempty"`
-	QtdeDias          string `xml:"qtdeDias,omitempty"`
-}
-
-type RevalidarPrazoAutorizacaoPostagemResponse struct {
-	XMLName xml.Name `xml:"revalidarPrazoAutorizacaoPostagemResponse"`
-
-	RevalidarPrazoAutorizacaoPostagem *RetornoRevalidarPrazo `xml:"revalidarPrazoAutorizacaoPostagem,omitempty"`
-}
-
-type RetornoRevalidarPrazo struct {
-	Numeropedido string `xml:"numero_pedido,omitempty"`
-	Prazo        string `xml:"prazo,omitempty"`
-	Coderro      string `xml:"cod_erro,omitempty"`
-	Msgerro      string `xml:"msg_erro,omitempty"`
-}
-
-type SobreWebService struct {
-	XMLName xml.Name `xml:"ns1:sobreWebService"`
-}
-
-type SobreWebServiceResponse struct {
-	XMLName xml.Name `xml:"sobreWebServiceResponse"`
-
-	SobreWebService *RetornoSobreWebService `xml:"sobreWebService,omitempty"`
-}
-
-type RetornoSobreWebService struct {
-	Data            string `xml:"data,omitempty"`
-	Hora            string `xml:"hora,omitempty"`
-	Coderro         string `xml:"cod_erro,omitempty"`
-	Msgerro         string `xml:"msg_erro,omitempty"`
-	Versao          string `xml:"versao,omitempty"`
-	DataHomologacao string `xml:"dataHomologacao,omitempty"`
-	DataProducao    string `xml:"dataProducao,omitempty"`
-	Fase            string `xml:"fase,omitempty"`
-	Resumo          string `xml:"resumo,omitempty"`
-}
-
+//CancelarPedido struct
 type CancelarPedido struct {
 	XMLName xml.Name `xml:"ns1:cancelarPedido"`
 
@@ -269,12 +190,13 @@ type CancelarPedido struct {
 	Tipo              string `xml:"tipo,omitempty"`
 }
 
+//CancelarPedidoResponse struct
 type CancelarPedidoResponse struct {
-	XMLName xml.Name `xml:"cancelarPedidoResponse"`
-
+	XMLName        xml.Name             `xml:"cancelarPedidoResponse"`
 	CancelarPedido *RetornoCancelamento `xml:"cancelarPedido,omitempty"`
 }
 
+//RetornoCancelamento struct
 type RetornoCancelamento struct {
 	Codigoadministrativo string              `xml:"codigo_administrativo,omitempty"`
 	Objetopostal         *ObjetoSimplificado `xml:"objeto_postal,omitempty"`
@@ -284,93 +206,19 @@ type RetornoCancelamento struct {
 	Msgerro              string              `xml:"msg_erro,omitempty"`
 }
 
+//ObjetoSimplificado struct
 type ObjetoSimplificado struct {
 	Numeropedido         int    `xml:"numero_pedido,omitempty"`
 	Statuspedido         string `xml:"status_pedido,omitempty"`
 	Datahoracancelamento string `xml:"datahora_cancelamento,omitempty"`
 }
 
-type SolicitarPostagemSimultanea struct {
-	XMLName xml.Name `xml:"ns1:solicitarPostagemSimultanea"`
-
-	CodAdministrativo  string              `xml:"codAdministrativo,omitempty"`
-	Codigoservico      string              `xml:"codigo_servico,omitempty"`
-	Cartao             string              `xml:"cartao,omitempty"`
-	Destinatario       *Pessoa             `xml:"destinatario,omitempty"`
-	Coletassolicitadas []*ColetaSimultanea `xml:"coletas_solicitadas,omitempty"`
-}
-
-type SolicitarPostagemSimultaneaResponse struct {
-	XMLName xml.Name `xml:"solicitarPostagemSimultaneaResponse"`
-
-	SolicitarPostagemSimultanea *RetornoPostagem `xml:"solicitarPostagemSimultanea,omitempty"`
-}
-
-type ValidarPostagemReversa struct {
-	XMLName xml.Name `xml:"ns1:validarPostagemReversa"`
-
-	CodAdministrativo string         `xml:"codAdministrativo,omitempty"`
-	Codigoservico     string         `xml:"codigo_servico,omitempty"`
-	Cartao            string         `xml:"cartao,omitempty"`
-	Cepdestinatario   string         `xml:"cep_destinatario,omitempty"`
-	Coleta            *ColetaReversa `xml:"coleta,omitempty"`
-}
-
-type ValidarPostagemReversaResponse struct {
-	XMLName xml.Name `xml:"validarPostagemReversaResponse"`
-
-	ValidarPostagemReversa *RetornoValidacao `xml:"validarPostagemReversa,omitempty"`
-}
-
-type CalcularDigitoVerificador struct {
-	XMLName xml.Name `xml:"ns1:calcularDigitoVerificador"`
-
-	Numero string `xml:"numero,omitempty"`
-}
-
-type CalcularDigitoVerificadorResponse struct {
-	XMLName xml.Name `xml:"calcularDigitoVerificadorResponse"`
-
-	CalcularDigitoVerificador *RetornoDigitoVerificador `xml:"calcularDigitoVerificador,omitempty"`
-}
-
-type RetornoDigitoVerificador struct {
-	Data    string `xml:"data,omitempty"`
-	Hora    string `xml:"hora,omitempty"`
-	Coderro string `xml:"cod_erro,omitempty"`
-	Msgerro string `xml:"msg_erro,omitempty"`
-	Digito  int    `xml:"digito,omitempty"`
-	Numero  int    `xml:"numero,omitempty"`
-}
-
-type SolicitarRange struct {
-	XMLName xml.Name `xml:"ns1:solicitarRange"`
-
-	CodAdministrativo string `xml:"codAdministrativo,omitempty"`
-	Tipo              string `xml:"tipo,omitempty"`
-	Servico           string `xml:"servico,omitempty"`
-	Quantidade        string `xml:"quantidade,omitempty"`
-}
-
-type SolicitarRangeResponse struct {
-	XMLName xml.Name `xml:"solicitarRangeResponse"`
-
-	SolicitarRange *RetornoFaixaNumerica `xml:"solicitarRange,omitempty"`
-}
-
-type RetornoFaixaNumerica struct {
-	Data         string `xml:"data,omitempty"`
-	Hora         string `xml:"hora,omitempty"`
-	Coderro      string `xml:"cod_erro,omitempty"`
-	Msgerro      string `xml:"msg_erro,omitempty"`
-	Faixainicial int    `xml:"faixa_inicial,omitempty"`
-	Faixafinal   int    `xml:"faixa_final,omitempty"`
-}
-
+//LogisticaReversaWS struct
 type LogisticaReversaWS struct {
 	client *SOAPClient
 }
 
+//NewLogisticaReversaWS creates a new struct with the given information
 func NewLogisticaReversaWS(url string, tls bool, auth *BasicAuth) *LogisticaReversaWS {
 	if url == "" {
 		url = ""
@@ -382,10 +230,10 @@ func NewLogisticaReversaWS(url string, tls bool, auth *BasicAuth) *LogisticaReve
 	}
 }
 
+//AcompanharPedidoPorData checks the status of the reverese postage requests in Correios
 // Error can be either of the following types:
 //
 //   - ComponenteException
-
 func (service *LogisticaReversaWS) AcompanharPedidoPorData(request *AcompanharPedidoPorData) (*AcompanharPedidoPorDataResponse, error) {
 	response := new(AcompanharPedidoPorDataResponse)
 	err := service.client.Call("", request, response)
@@ -396,10 +244,10 @@ func (service *LogisticaReversaWS) AcompanharPedidoPorData(request *AcompanharPe
 	return response, nil
 }
 
+//SolicitarPostagemReversa Request a reverse postage to correios
 // Error can be either of the following types:
 //
 //   - ComponenteException
-
 func (service *LogisticaReversaWS) SolicitarPostagemReversa(request *SolicitarPostagemReversa) (*SolicitarPostagemReversaResponse, error) {
 	response := new(SolicitarPostagemReversaResponse)
 	err := service.client.Call("", request, response)
@@ -410,66 +258,10 @@ func (service *LogisticaReversaWS) SolicitarPostagemReversa(request *SolicitarPo
 	return response, nil
 }
 
+//CancelarPedido cancels a request in Correios
 // Error can be either of the following types:
 //
 //   - ComponenteException
-
-func (service *LogisticaReversaWS) ValidarPostagemSimultanea(request *ValidarPostagemSimultanea) (*ValidarPostagemSimultaneaResponse, error) {
-	response := new(ValidarPostagemSimultaneaResponse)
-	err := service.client.Call("", request, response)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
-}
-
-// Error can be either of the following types:
-//
-//   - ComponenteException
-
-func (service *LogisticaReversaWS) AcompanharPedido(request *AcompanharPedido) (*AcompanharPedidoResponse, error) {
-	response := new(AcompanharPedidoResponse)
-	err := service.client.Call("", request, response)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
-}
-
-// Error can be either of the following types:
-//
-//   - ComponenteException
-
-func (service *LogisticaReversaWS) RevalidarPrazoAutorizacaoPostagem(request *RevalidarPrazoAutorizacaoPostagem) (*RevalidarPrazoAutorizacaoPostagemResponse, error) {
-	response := new(RevalidarPrazoAutorizacaoPostagemResponse)
-	err := service.client.Call("", request, response)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
-}
-
-// Error can be either of the following types:
-//
-//   - ComponenteException
-
-func (service *LogisticaReversaWS) SobreWebService(request *SobreWebService) (*SobreWebServiceResponse, error) {
-	response := new(SobreWebServiceResponse)
-	err := service.client.Call("", request, response)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
-}
-
-// Error can be either of the following types:
-//
-//   - ComponenteException
-
 func (service *LogisticaReversaWS) CancelarPedido(request *CancelarPedido) (*CancelarPedidoResponse, error) {
 	response := new(CancelarPedidoResponse)
 	err := service.client.Call("", request, response)
@@ -480,131 +272,79 @@ func (service *LogisticaReversaWS) CancelarPedido(request *CancelarPedido) (*Can
 	return response, nil
 }
 
-// Error can be either of the following types:
-//
-//   - ComponenteException
-
-func (service *LogisticaReversaWS) SolicitarPostagemSimultanea(request *SolicitarPostagemSimultanea) (*SolicitarPostagemSimultaneaResponse, error) {
-	response := new(SolicitarPostagemSimultaneaResponse)
-	err := service.client.Call("", request, response)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
-}
-
-// Error can be either of the following types:
-//
-//   - ComponenteException
-
-func (service *LogisticaReversaWS) ValidarPostagemReversa(request *ValidarPostagemReversa) (*ValidarPostagemReversaResponse, error) {
-	response := new(ValidarPostagemReversaResponse)
-	err := service.client.Call("", request, response)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
-}
-
-// Error can be either of the following types:
-//
-//   - ComponenteException
-
-func (service *LogisticaReversaWS) CalcularDigitoVerificador(request *CalcularDigitoVerificador) (*CalcularDigitoVerificadorResponse, error) {
-	response := new(CalcularDigitoVerificadorResponse)
-	err := service.client.Call("", request, response)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
-}
-
-// Error can be either of the following types:
-//
-//   - ComponenteException
-
-func (service *LogisticaReversaWS) SolicitarRange(request *SolicitarRange) (*SolicitarRangeResponse, error) {
-	response := new(SolicitarRangeResponse)
-	err := service.client.Call("", request, response)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
-}
-
 var timeout = time.Duration(30 * time.Second)
 
+//dialTimeout Sets the timeout of the connection
 func dialTimeout(network, addr string) (net.Conn, error) {
 	return net.DialTimeout(network, addr, timeout)
 }
 
+//SOAPEnvelopeResponse struct
 type SOAPEnvelopeResponse struct {
 	XMLName xml.Name `xml:"Envelope"`
-
-	Body SOAPBodyResponse
+	Body    SOAPBodyResponse
 }
 
+//SOAPBodyResponse struct
 type SOAPBodyResponse struct {
-	XMLName xml.Name `xml:"Body"`
-
+	XMLName xml.Name           `xml:"Body"`
 	Fault   *SOAPFaultResponse `xml:",omitempty"`
 	Content interface{}        `xml:",omitempty"`
 }
 
+//SOAPFaultResponse struct
 type SOAPFaultResponse struct {
 	XMLName xml.Name `xml:"Fault"`
-
-	Code   string `xml:"faultcode,omitempty"`
-	String string `xml:"faultstring,omitempty"`
-	Actor  string `xml:"faultactor,omitempty"`
-	Detail string `xml:"detail,omitempty"`
+	Code    string   `xml:"faultcode,omitempty"`
+	String  string   `xml:"faultstring,omitempty"`
+	Actor   string   `xml:"faultactor,omitempty"`
+	Detail  string   `xml:"detail,omitempty"`
 }
 
+//SOAPEnvelope struct
 type SOAPEnvelope struct {
 	XMLName xml.Name `xml:"soap:Envelope"`
 	Tag1    string   `xml:"xmlns:soap,attr"`
 	Tag2    string   `xml:"xmlns:ns1,attr,omitempty"`
-
-	Body SOAPBody
+	Body    SOAPBody
 }
 
+//SOAPHeader struct
 type SOAPHeader struct {
 	XMLName xml.Name `xml:"soap:Header"`
-
-	Header interface{}
+	Header  interface{}
 }
 
+//SOAPBody struct
 type SOAPBody struct {
-	XMLName xml.Name `xml:"soap:Body"`
-
+	XMLName xml.Name    `xml:"soap:Body"`
 	Fault   *SOAPFault  `xml:",omitempty"`
 	Content interface{} `xml:",omitempty"`
 }
 
+//SOAPFault struct
 type SOAPFault struct {
 	XMLName xml.Name `xml:"soap:Fault"`
-
-	Code   string `xml:"faultcode,omitempty"`
-	String string `xml:"faultstring,omitempty"`
-	Actor  string `xml:"faultactor,omitempty"`
-	Detail string `xml:"detail,omitempty"`
+	Code    string   `xml:"faultcode,omitempty"`
+	String  string   `xml:"faultstring,omitempty"`
+	Actor   string   `xml:"faultactor,omitempty"`
+	Detail  string   `xml:"detail,omitempty"`
 }
 
+//BasicAuth struct
 type BasicAuth struct {
 	Login    string
 	Password string
 }
 
+//SOAPClient struct
 type SOAPClient struct {
 	url  string
 	tls  bool
 	auth *BasicAuth
 }
 
+//UnmarshalXML unmarshal the XML struct
 func (b *SOAPBodyResponse) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	if b.Content == nil {
 		return xml.UnmarshalError("Content must be a pointer to a struct")
@@ -655,13 +395,17 @@ Loop:
 	return nil
 }
 
+//Error returns the SOAPFault error
 func (f *SOAPFault) Error() string {
 	return f.String
 }
+
+//Error returns the SOAPFaultResponse error
 func (f *SOAPFaultResponse) Error() string {
 	return f.String
 }
 
+//NewSOAPClient creates a new SOAP client
 func NewSOAPClient(url string, tls bool, auth *BasicAuth) *SOAPClient {
 	return &SOAPClient{
 		url:  url,
@@ -670,6 +414,7 @@ func NewSOAPClient(url string, tls bool, auth *BasicAuth) *SOAPClient {
 	}
 }
 
+//Call call SOAP method
 func (s *SOAPClient) Call(soapAction string, request, response interface{}) error {
 	envelope := SOAPEnvelope{
 		Tag1: "http://schemas.xmlsoap.org/soap/envelope/",

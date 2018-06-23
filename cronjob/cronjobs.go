@@ -8,6 +8,7 @@ import (
 	cnf "github.com/pintobikez/brazilian-correios-service/config/structures"
 	hand "github.com/pintobikez/brazilian-correios-service/correiosapi"
 	repo "github.com/pintobikez/brazilian-correios-service/repository"
+	"io"
 	"log"
 	"net/http"
 	"regexp"
@@ -20,17 +21,24 @@ var (
 	DeliveryOk     = map[string]bool{"0": true, "1": true}
 )
 
+//Cronjob struct
 type Cronjob struct {
 	Repo repo.Definition
 	Conf *cnf.CorreiosConfig
 	Hand *hand.Handler
 }
 
+//New Initializes a new Cronjob struct
 func New(r repo.Definition, c *cnf.CorreiosConfig) *Cronjob {
 	return &Cronjob{Repo: r, Conf: c, Hand: &hand.Handler{Repo: r, Conf: c}}
 }
 
-// Handler to Check if reverse is completed
+//SetOutput sets the output file
+func (c *Cronjob) SetOutput(file io.Writer) {
+	log.SetOutput(file)
+}
+
+//CheckUpdatedReverses Handler to Check if reverse is completed
 func (c *Cronjob) CheckUsedReverses(from int, offset int) {
 
 	where := make([]*strut.SearchWhere, 0, 1)
@@ -100,7 +108,7 @@ func (c *Cronjob) CheckUsedReverses(from int, offset int) {
 	}
 }
 
-// Handler to Check if any updates have happened
+//CheckUpdatedReverses Handler to Check if any updates have happened
 func (c *Cronjob) CheckUpdatedReverses(requestType string) {
 	resp := c.Hand.FollowReverseLogistic(requestType)
 
@@ -112,7 +120,7 @@ func (c *Cronjob) CheckUpdatedReverses(requestType string) {
 	}
 }
 
-// Handler to get all Requests with error and retry them again given a Max number of retries
+//ReprocessRequestsWithError Handler to get all Requests with error and retry them again given a Max number of retries
 func (c *Cronjob) ReprocessRequestsWithError() {
 
 	where := make([]*strut.SearchWhere, 0, 2)
@@ -126,7 +134,6 @@ func (c *Cronjob) ReprocessRequestsWithError() {
 	// something happened
 	if err != nil {
 		log.Printf("Error performing search %s", err.Error())
-		return
 	} else {
 		// retry all of the requests
 		for _, e := range results {
@@ -140,7 +147,7 @@ func (c *Cronjob) ReprocessRequestsWithError() {
 	}
 }
 
-// Performs an Http request
+//doRequest Performs an Http request
 func doRequest(e *strut.RequestResponse) {
 	buffer := new(bytes.Buffer)
 	_ = json.NewEncoder(buffer).Encode(e)

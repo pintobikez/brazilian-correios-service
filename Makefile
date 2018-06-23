@@ -2,7 +2,7 @@
 
 APP_NAME=brazilian-correios-service
 APP_PATH=$(shell head -n 1 ./glide.yaml | awk '{print $$2}')
-APP_VERSION=0.0.1
+APP_VERSION=0.0.2
 
 LDFLAGS=--ldflags '-X main.version=${APP_VERSION} -X main.appName=${APP_NAME} -extldflags "-static" -w'
 OS=linux

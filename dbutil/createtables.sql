@@ -1,6 +1,6 @@
-CREATE DATABASE correios_reverse;
+CREATE DATABASE correios;
 
-USE correios_reverse;
+USE correios;
 
 CREATE TABLE `request` (
   `request_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -32,7 +32,7 @@ CREATE TABLE `request` (
   `destination_referencia` varchar(60) DEFAULT NULL,
   `destination_email` varchar(72) NOT NULL,
   `callback` varchar(255) NOT NULL,
-  `status` varchar(10) NOT NULL,
+  `status` varchar(20) NOT NULL,
   `error_message` varchar(255) DEFAULT NULL,
   `retries` int(2) DEFAULT 0,
   `postage_code` varchar(10) DEFAULT NULL,

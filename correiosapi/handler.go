@@ -34,7 +34,7 @@ type Handler struct {
 	Conf *cnf.CorreiosConfig
 }
 
-// Checks in Correios WebServicethe Tracking status of the given objects
+// Checks in Correios WebService the Tracking status of the given objects
 func (h *Handler) TrackObjects(o *strut.Tracking) (*strut.TrackingResponse, error) {
 	if len(o.Objects) > 0 {
 		client := track.NewRastroWS(h.Conf.URLTracking, true)

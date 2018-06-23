@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
-	"fmt"
 	strut "github.com/pintobikez/brazilian-correios-service/api/structures"
 	cnf "github.com/pintobikez/brazilian-correios-service/config/structures"
 	hand "github.com/pintobikez/brazilian-correios-service/correiosapi"
@@ -15,6 +14,12 @@ import (
 	"strconv"
 )
 
+var (
+	DeliveryTypes  = map[string]bool{"BDE": true, "BDI": true, "BDR": true}
+	DeliveryFailed = map[string]string{"50": "Stolen", "51": "Stolen", "52": "Stolen", "80": "Lost"}
+	DeliveryOk     = map[string]bool{"0": true, "1": true}
+)
+
 type Cronjob struct {
 	Repo repo.Definition
 	Conf *cnf.CorreiosConfig
@@ -23,6 +28,76 @@ type Cronjob struct {
 
 func New(r repo.Definition, c *cnf.CorreiosConfig) *Cronjob {
 	return &Cronjob{Repo: r, Conf: c, Hand: &hand.Handler{Repo: r, Conf: c}}
+}
+
+// Handler to Check if reverse is completed
+func (c *Cronjob) CheckUsedReverses(from int, offset int) {
+
+	where := make([]*strut.SearchWhere, 0, 1)
+	where = append(where, &strut.SearchWhere{Field: "status", Value: strut.StatusUsed, Operator: "="})
+
+	search := &strut.Search{Where: where, From: from, Offset: offset}
+
+	results, err := c.Repo.GetRequestBy(search)
+
+	// something happened
+	if err != nil {
+		log.Printf("Error performing search %s", err.Error())
+		return
+	} else {
+
+		s := len(results)
+		els := make(map[string]*strut.Request)
+
+		o := new(strut.Tracking)
+		o.TrackingType = "LAST"
+		o.Language = "EN"
+		o.Objects = make([]string, 0, s)
+
+		// get the tracking codes
+		for _, e := range results {
+			o.Callback = e.Callback
+			o.Objects = append(o.Objects, e.TrackingCode)
+
+			els[e.TrackingCode] = e
+		}
+
+		// check the tracking for all
+		r, err := c.Hand.TrackObjects(o)
+
+		if err != nil {
+			log.Printf("Error performing tracking %s", err.Error())
+			return
+		} else {
+
+			// check if there are deliveries or failed delivies
+			for _, e := range r.Items {
+
+				if e.Error != "" && DeliveryTypes[e.Events[0].Type] {
+					// delivered
+					if _, ok := DeliveryOk[e.Events[0].StatusCode]; ok == true {
+						el := els[e.Object]
+						go c.Repo.UpdateRequestStatus(&strut.Request{RequestID: el.RequestID, Retries: 0}, strut.StatusDelivered, "Delivered")
+
+						go doRequest(&strut.RequestResponse{el.RequestID, el.PostageCode, el.TrackingCode, strut.StatusDelivered, el.Callback})
+					}
+
+					// delivery failed
+					if val, ok := DeliveryFailed[e.Events[0].StatusCode]; ok == true {
+						el := els[e.Object]
+						go c.Repo.UpdateRequestStatus(&strut.Request{RequestID: el.RequestID, Retries: 0}, strut.StatusFailedDelivery, val)
+
+						go doRequest(&strut.RequestResponse{el.RequestID, el.PostageCode, el.TrackingCode, strut.StatusFailedDelivery, el.Callback})
+					}
+				}
+			}
+		}
+
+		// if we still have more to process
+		if s == offset {
+			c.CheckUsedReverses((from + offset), offset)
+		}
+	}
 }
 
 // Handler to Check if any updates have happened
@@ -51,6 +126,7 @@ func (c *Cronjob) ReprocessRequestsWithError() {
 	// something happened
 	if err != nil {
 		log.Printf("Error performing search %s", err.Error())
+		return
 	} else {
 		// retry all of the requests
 		for _, e := range results {
@@ -73,7 +149,7 @@ func doRequest(e *strut.RequestResponse) {
 	req, err := http.NewRequest("POST", e.Callback, buffer)
 	if err != nil {
 		// log error
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		return
 	}
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
@@ -90,7 +166,7 @@ func doRequest(e *strut.RequestResponse) {
 	res, err := client.Do(req)
 	if err != nil {
 		// log error
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		return
 	}
 	defer res.Body.Close()

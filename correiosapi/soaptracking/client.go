@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/xml"
-	// "golang.org/x/text/encoding/charmap"
-	// "golang.org/x/text/transform"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -76,8 +74,7 @@ func NewRastroWS(url string, tls bool) *RastroWS {
 	}
 }
 
-// Error can be either of the following types:
-//
+// Error can be of the following types:
 //   - ComponenteException
 
 func (service *RastroWS) BuscaEventosLista(request *BuscaEventosLista) (*BuscaEventosListaResponse, error) {
@@ -276,46 +273,6 @@ func (s *SOAPClient) Call(soapAction string, request, response interface{}) erro
 	if err != nil {
 		return err
 	}
-
-	/*req.Header.Add("Content-Type", "text/xml; charset=\"ISO-8859-1\"")
-	if soapAction != "" {
-		req.Header.Add("SOAPAction", soapAction)
-	}
-
-	req.Close = true
-
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: s.tls,
-		},
-		Dial: dialTimeout,
-	}
-
-	client := &http.Client{Transport: tr}
-	res, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	//Encode to UTF8
-	rInUTF8 := transform.NewReader(res.Body, charmap.ISO8859_1.NewDecoder())
-	rawbody, err := ioutil.ReadAll(rInUTF8)
-	if err != nil {
-		return err
-	}
-	if len(rawbody) == 0 {
-		return nil
-	}
-
-	respEnvelope := new(SOAPEnvelopeResponse)
-	respEnvelope.Body = SOAPBodyResponse{Content: response}
-	err = xml.Unmarshal(rawbody, respEnvelope)
-
-	if err != nil {
-		log.Println(err.Error())
-		return err
-	}*/
 
 	fault := respEnvelope.Body.Fault
 	if fault != nil {

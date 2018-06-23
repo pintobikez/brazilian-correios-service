@@ -1,13 +1,15 @@
 package structures
 
 const (
-	StatusPending    = "pending"
-	StatusProcessing = "processing"
-	StatusGenerated  = "generated"
-	StatusCanceled   = "canceled"
-	StatusUsed       = "used"
-	StatusExpired    = "expired"
-	StatusError      = "error"
+	StatusPending        = "pending"
+	StatusProcessing     = "processing"
+	StatusGenerated      = "generated"
+	StatusCanceled       = "canceled"
+	StatusUsed           = "used"
+	StatusDelivered      = "delivered"
+	StatusFailedDelivery = "deliveryfailed"
+	StatusExpired        = "expired"
+	StatusError          = "error"
 )
 
 type Search struct {
@@ -100,10 +102,10 @@ type TrackingHeader struct {
 }
 
 type TrackingEvents struct {
-	Type        string `json:"type,omitempty"`
-	StatusCode  string `json:"status,omitempty"`
-	DateTime    string `json:"date,omitempty"`
-	Description string `json:"description,omitempty"`
-	Details     string `json:"details,omitempty"`
+	Type        string `json:"type"`
+	StatusCode  string `json:"status"`
+	DateTime    string `json:"date"`
+	Description string `json:"description"`
+	Details     string `json:"details"`
 	CTECorreios string `json:"responsible_unit,omitempty"`
 }

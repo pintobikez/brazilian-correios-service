@@ -53,7 +53,7 @@ func (a *API) GetTracking() echo.HandlerFunc {
 
 		// Track the objects
 		// If the number of objects is Lower then 5 we run it as a normal function
-		// If not we run it a go routine
+		// If not we run it as a go routine
 		if len(o.Objects) <= 5 {
 			ret, err := a.Hand.TrackObjects(o)
 			if err != nil {
@@ -63,6 +63,7 @@ func (a *API) GetTracking() echo.HandlerFunc {
 			return c.JSON(http.StatusOK, ret)
 		}
 
+		// run it as a go routine and reply to the callback url
 		go func() {
 			if ret, _ := a.Hand.TrackObjects(o); ret != nil {
 				doCallbackRequest(ret, o.Callback)
@@ -402,7 +403,7 @@ func (a *API) ValidateSearchJSON(s *strut.Search) map[string]string {
 		if e.Operator != "" && OperatorValues[e.Operator] {
 			ret["operator"] = fmt.Sprintf(ErrorValidValues, "like, =, >=, <=, <>, IN, NOT IN")
 		}
-		if e.JoinBy != "" && e.JoinBy != "AND"  && e.JoinBy != "OR" {
+		if e.JoinBy != "" && e.JoinBy != "AND" && e.JoinBy != "OR" {
 			ret["joinby"] = fmt.Sprintf(ErrorValidValues, "AND, OR")
 		}
 	}

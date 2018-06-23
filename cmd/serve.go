@@ -121,6 +121,7 @@ func Serve(c *cli.Context) error {
 	cr.AddFunc("* 0 */6 * * *", func() { cj.CheckUpdatedReverses("C") })     // checks for Colect updates
 	cr.AddFunc("* 10 */6 * * *", func() { cj.CheckUpdatedReverses("A") })    // checks for Postage updates
 	cr.AddFunc("* */20 * * * *", func() { cj.ReprocessRequestsWithError() }) // checks for Requests with Error and reprocesses them
+	cr.AddFunc("* */60 * * * *", func() { cj.CheckUsedReverses(0, 1000) })   // checks if Requests have been delivered
 	cr.Start()
 	defer cr.Stop()
 

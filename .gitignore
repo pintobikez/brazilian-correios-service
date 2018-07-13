@@ -7,3 +7,5 @@ main
 brazilian-correios-service
 handle
 core.correios.yml.local
+core.database.yml.local
+*.log

@@ -74,10 +74,13 @@ func (c *Cronjob) CheckUsedReverses(from int, offset int) {
 		r, err := c.Hand.TrackObjects(o)
 
 		if err != nil {
-			log.Printf("Error performing tracking %s", err.Error())
+			log.Printf("Error performing tracking %s\n", err.Error())
+			return
+		}
+		if r == nil {
+			log.Println("Nothing to search for")
 			return
 		} else {
-
 			// check if there are deliveries or failed delivies
 			for _, e := range r.Items {
 

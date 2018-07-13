@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/labstack/echo"
 	mw "github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/color"
@@ -21,6 +22,8 @@ import (
 
 //Handle Start Http Server
 func Handle(c *cli.Context) error {
+
+	fmt.Printf("Flags %d %v", c.NumFlags(), c.GlobalFlagNames())
 
 	// Echo instance
 	e := &srv.Server{echo.New()}

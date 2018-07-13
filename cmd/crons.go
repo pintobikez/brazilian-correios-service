@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/labstack/gommon/color"
 	uti "github.com/pintobikez/brazilian-correios-service/config"
@@ -11,12 +12,15 @@ import (
 	"github.com/robfig/cron"
 	"gopkg.in/urfave/cli.v1"
 	"log"
+	"os"
+	"os/signal"
+	"time"
 )
 
 //CronController Register a service in the Authentication Service and returns the generated API KEY
 func CronController(c *cli.Context) error {
 
-	f := lg.File(c.String("log-folder") + "/app.log")
+	f := lg.File(c.String("log-folder") + "/crons.log")
 	log.SetOutput(f)
 
 	//loads db connection
@@ -53,6 +57,14 @@ func CronController(c *cli.Context) error {
 	defer cr.Stop()
 
 	fmt.Printf("%s %s\n", color.Green("[RESULT]"), "Cronjobs started.")
+
+	// Graceful Shutdown
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+
+	_, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
 	return nil
 }

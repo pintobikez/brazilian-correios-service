@@ -75,24 +75,6 @@ func Handle(c *cli.Context) error {
 		},
 	))
 
-	if c.String("revision-file") != "" {
-		e.File("/rev.txt", c.String("revision-file"))
-	}
-
-	if swagger := c.String("swagger-file"); swagger != "" {
-		g := e.Group("/docs")
-		g.Use(mw.CORSWithConfig(
-			mw.CORSConfig{
-				AllowOrigins: []string{"http://petstore.swagger.io"},
-				AllowMethods: []string{echo.GET, echo.HEAD},
-			},
-		))
-
-		g.GET("", func(c echo.Context) error {
-			return c.File(swagger)
-		})
-	}
-
 	// Start server
 	colorer := color.New()
 	colorer.Printf("⇛ %s service - %s\n", appName, color.Green(version))
